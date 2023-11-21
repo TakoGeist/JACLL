@@ -1,0 +1,22 @@
+
+/*
+    Arrays are always stored on the heap (virtual machine requirement) 
+    Indexing starts at 0 
+        let array: [i32, 2] = [1,2] //  Declaration of an array with size 2
+        array[0] // Access to the first element of array
+*/
+
+func main(){
+    
+    let array: [i32, 5] = [1, 2, 3, 4, 5];
+
+    let mut product: i32 = 1;
+
+    for i: i32 = 0; i < 5; i = i + 1 {
+        product = product * array[i];
+    }
+
+    print(product);
+
+    return;
+}
