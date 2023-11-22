@@ -12,7 +12,7 @@ func main(){
 
     let mut product: i32 = 1;
 
-    for i: i32 = 0; i < 5; i = i + 1 {
+    for i: i32 = 0; i <= 4; i = i + 1 {
         product = product * array[i];
     }
 

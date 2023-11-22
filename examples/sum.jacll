@@ -20,6 +20,14 @@ func main(){
     z = x + y;
 
     print(z);
-    
+
+    let a: f32 = 2.;
+    let b: f32 = .5;
+    let mut c: f32 = 0.0;
+
+    c = a + b;
+
+    print(c);
+
     return;
 }
