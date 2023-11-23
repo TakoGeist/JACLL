@@ -1,5 +1,8 @@
 import ply.lex as lex
 
+
+#states = (('comment','exclusive'),)
+
 reserved = {
     'let' : 'LET',
     'for' : 'FOR',
@@ -23,15 +26,58 @@ t_STRING = r'\"([^"\\]|\\.)*\"'
 t_ALGCODE = r'(\+|\-|\*\*|\*|\/)'
 t_LOGCODE = r'(!|~|\&\&|\&|\^|(\|\|)|(\|)|(<=)|(>=)|<|>)'
 t_ENDLINE = r';'
-t_LPAR = r'\('
-t_RPAR = r'\)'
-t_LBRA = r'\['
-t_RBRA = r'\]'
-t_LCURLY = r'\{'
-t_RCURLY = r'\}'
 t_DDOT = r'\:'
 t_COMMA = r'\,'
 t_INT = r'\d+'
+
+def t_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value) 
+
+def t_LPAR(t):
+    r'\('
+    lexer.stack.append(t)
+    return t
+
+def t_LBRA(t):
+    r'\['
+    lexer.stack.append(t)
+    return t
+
+def t_LCURLY(t):
+    r'\{'
+    lexer.stack.append(t)
+    return t
+
+def t_RPAR(t):
+    r'\)'
+    if (len(lexer.stack) != 0):
+        token = lexer.stack.pop(-1)
+        if (token.value != '('):
+            raise SyntaxError(f'Found \')\' at line {t.lineno} but was never open')
+    else:
+        raise SyntaxError(f'Found \')\' at line {t.lineno} but was never open')
+    return t
+
+def t_RBRA(t):
+    r'\]'
+    if (len(lexer.stack) != 0):
+        token = lexer.stack.pop(-1)
+        if (token.value != '['):
+            raise SyntaxError(f'Found \']\' at line {t.lineno} but was never open')
+    else:
+        raise SyntaxError(f'Found \']\' at line {t.lineno} but was never open')
+    return t
+
+def t_RCURLY(t):
+    r'\}'
+    if (len(lexer.stack) != 0):
+        token = lexer.stack.pop(-1)
+        if (token.value != '{'):
+            raise SyntaxError(f'Found \'}}\' at line {t.lineno} but was never open')
+    else:
+        raise SyntaxError(f'Found \'}}\' at line {t.lineno} but was never open')
+    return t
 
 def t_FLOAT(t):
     r'(\d+\.\d*|\d*\.\d+)'
@@ -50,13 +96,23 @@ def t_COMMENT(_):
     r'((\/\/.*)|(\/\*([^\*]*|\*|[^\/])*\*\/))'
     pass
 
+def t_eof(t):
+    if (len(t.lexer.stack) != 0):
+        print(t.lexer.stack)
+        raise SyntaxError(f'\'{t.lexer.stack[0].value}\' at line {t.lexer.stack[0].lineno} was never closed')
+    return None
+
+
+
 def t_error(t):
     raise SyntaxError(f"Illegal character \'{t.value[0]}\' at position {t.lexpos}.")
     
 
-t_ignore = ' \t\n'
+t_ignore = ' \t'
 
 lexer = lex.lex()
+
+lexer.stack = []
 
 
 
