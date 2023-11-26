@@ -1,8 +1,5 @@
 import ply.lex as lex
 
-
-#states = (('comment','exclusive'),)
-
 reserved = {
     'let' : 'LET',
     'for' : 'FOR',
@@ -15,24 +12,27 @@ reserved = {
     'f32' : 'F32',
     'f64' : 'F64',
     'bool' : 'BOOL',
+    'str' : 'STR',
     'return' : 'RETURN',
     'print' : 'PRINT',
 }
 
 tokens = ['STRING', 'COMMENT', 'ENDLINE', 'EQUAL', 'ALGCODE', 'LOGCODE', 'VARNAME', 'LPAR',
-          'RPAR', 'LBRA', 'RBRA', 'LCURLY', 'RCURLY', 'DDOT', 'COMMA', 'INT', 'FLOAT'] + list(reserved.values())
+          'RPAR', 'LBRA', 'RBRA', 'LCURLY', 'RCURLY', 'DDOT', 'COMMA', 'INT', 'FLOAT', 
+          'BOOLEAN'] + list(reserved.values())
 
 t_STRING = r'\"([^"\\]|\\.)*\"' 
-t_ALGCODE = r'(\+|\-|\*\*|\*|\/)'
-t_LOGCODE = r'(!|~|\&\&|\&|\^|(\|\|)|(\|)|(<=)|(>=)|<|>)'
-t_ENDLINE = r';'
+t_INT = r'(\-)?\d+'
+t_ALGCODE = r'(\+|(\-)|\*\*|\*|\/|\%)'
+t_LOGCODE = r'((\=\=)|\!|\~|\&\&|\&|\^|(\|\|)|(\|)|(\<\=)|(\>\=)|(\<)|\>)'
+t_EQUAL = r'\='
+t_ENDLINE = r'\;'
 t_DDOT = r'\:'
 t_COMMA = r'\,'
-t_INT = r'\d+'
 
 def t_newline(t):
     r'\n+'
-    t.lexer.lineno += len(t.value) 
+    t.lexer.lineno += len(t.value)
 
 def t_LPAR(t):
     r'\('
@@ -80,7 +80,7 @@ def t_RCURLY(t):
     return t
 
 def t_FLOAT(t):
-    r'(\d+\.\d*|\d*\.\d+)'
+    r'(\-)?(\d+\.\d*|\d*\.\d+)'
     return t
 
 def t_VARNAME(t):
@@ -88,20 +88,15 @@ def t_VARNAME(t):
     t.type = reserved.get(t.value, 'VARNAME')
     return t
 
-def t_EQUAL(t):
-    r'='
-    return t
-
-def t_COMMENT(_):
+def t_COMMENT(t):
     r'((\/\/.*)|(\/\*([^\*]*|\*|[^\/])*\*\/))'
+    t.lexer.lineno += t.value.count('\n') 
     pass
 
 def t_eof(t):
     if (len(t.lexer.stack) != 0):
-        print(t.lexer.stack)
         raise SyntaxError(f'\'{t.lexer.stack[0].value}\' at line {t.lexer.stack[0].lineno} was never closed')
     return None
-
 
 
 def t_error(t):
@@ -113,7 +108,3 @@ t_ignore = ' \t'
 lexer = lex.lex()
 
 lexer.stack = []
-
-
-
-
