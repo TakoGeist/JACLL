@@ -57,15 +57,19 @@ def p_funcCode(p):
 
 def p_code(p):
     """ code : line ENDLINE code
+             | forLoop code
+             | ifClause code
              |
     """
-    if len(p) > 1:
+    if len(p) == 4:
         p[0] = p[1] + " " + p[2] + " " + p[3]
+    elif len(p) == 3:
+        p[0] = p[1] + " " + p[2]
     else: 
         p[0] = ""
     
 def p_retval(p):
-    """ retval : VARNAME ENDLINE
+    """ retval : evaluation ENDLINE
                | ENDLINE
     """
     if len(p) == 2:
@@ -76,8 +80,6 @@ def p_retval(p):
 def p_line(p):
     """ line : declaration
              | expr
-             | ifClause
-             | forLoop
              | print
              |
     """
@@ -119,7 +121,8 @@ def p_forControl(p):
         p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4]
     else:
         p[0] = p[1] + " " + p[2] + " " + p[3]
-        
+
+ 
 def p_forDec(p):
     'forDec : var EQUAL evaluation'
     p[0] = p[1] + " " + p[2] + " " + p[3]
@@ -191,10 +194,11 @@ def p_evaluation(p):
         p[0] = p[1]
 
 def p_declaration(p):
-    """declaration : LET var EQUAL val
-                   | LET MUT var EQUAL val
+    """declaration : LET var EQUAL evaluation
+                   | LET MUT var EQUAL evaluation
                    | LET var EQUAL listInit
-                   | LET MUT var EQUAL listInit"""
+                   | LET MUT var EQUAL listInit
+                   """
     if len(p) == 5:
         p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4]
     else:
@@ -217,6 +221,7 @@ def p_listElems(p):
         p[0] = p[1]
     else:
         p[0] = p[1] + " " + p[2] + " " + p[3]
+        
 def p_var(p):
     'var : VARNAME typeAtrib'
     p[0] = p[1] + " " + p[2]

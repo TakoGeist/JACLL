@@ -23,7 +23,7 @@ func main(){
         x = x + y;
     }
 
-    print(x)
+    print(x);
 
     return;
 }
