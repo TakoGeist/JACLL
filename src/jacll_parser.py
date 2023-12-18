@@ -1,21 +1,31 @@
 import ply.yacc as yacc
 from jacll_lexer import tokens
 
+precedence = (('left','GREATERE'),
+            #   (),
+              ('right', 'NOT'),
+              ('left', 'PLUS', 'MINUS'),
+              ('left', 'MULT', 'DIV', 'MOD'),
+              ('right', 'POW'),
+              ('right', 'UMINUS'),
+              ('left', 'LPAR', 'RPAR'),
+              )
+
 def p_prog(p):
     """prog : func prog
             | func
-            """
+    """
     if len(p) > 2:
         p[0] = p[1] + " " + p[2]
     else:
         p[0] = p[1]
 
 def p_func(p):
-    'func : FUNC VARNAME LPAR args RPAR LCURLY func_code return RCURLY'
+    'func : FUNC VARNAME LPAR args RPAR output LCURLY funcCode RCURLY'
     p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4] + " " + p[5] + " " + p[6] + " " + p[7] + " " + p[8] + " " + p[9]
 
 def p_return(p):
-    """return : EQUAL LOGCODE type
+    """output : EQUAL GREATER type
               | 
     """
     if len(p) > 1:
@@ -41,9 +51,9 @@ def p_listarg(p):
     else: 
         p[0] = ""
 
-def p_func_code(p):
-    'func_code : code RETURN retval ENDLINE'
-    p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4]
+def p_funcCode(p):
+    'funcCode : code RETURN retval'
+    p[0] = p[1] + " " + p[2] + " " + p[3]
 
 def p_code(p):
     """ code : line ENDLINE code
@@ -55,19 +65,19 @@ def p_code(p):
         p[0] = ""
     
 def p_retval(p):
-    """ retval : VARNAME
-               |
+    """ retval : VARNAME ENDLINE
+               | ENDLINE
     """
-    if len(p) > 1:
+    if len(p) == 2:
         p[0] = p[1]
-    else: 
-        p[0] = ""
+    else:   
+        p[0] = p[1] + " " + p[2]
 
 def p_line(p):
     """ line : declaration
              | expr
-             | if_clause
-             | for_loop
+             | ifClause
+             | forLoop
              | print
              |
     """
@@ -77,31 +87,31 @@ def p_line(p):
         p[0] = ""
 
 def p_print(p):
-    "print : PRINT LPAR val RPAR"
+    'print : PRINT LPAR val RPAR'
     p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4]
 
-def p_if_clause(p):
-    'if_clause : IF eval LCURLY code RCURLY else_clause'
+def p_ifClause(p):
+    'ifClause : IF evaluation LCURLY code RCURLY elseClause'
     p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4] + " " + p[5] + " " + p[6]
 
-def p_else_clause(p):
-    """else_clause : ELSE LCURLY code RCURLY
-                   |                
+def p_elseClause(p):
+    """elseClause : ELSE LCURLY code RCURLY
+                  |                
     """
     if len(p) > 1:
         p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4]
     else: 
         p[0] = ""
 
-def p_for_loop(p):
-    'for_loop : FOR for_control LCURLY code RCURLY'
+def p_forLoop(p):
+    'forLoop : FOR forControl LCURLY code RCURLY'
     p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4] + " " + p[5]
 
-def p_for_control(p):
-    """for_control : for_dec ENDLINE eval ENDLINE expr
-                   | for_dec ENDLINE eval ENDLINE
-                   | ENDLINE eval ENDLINE expr
-                   | ENDLINE eval ENDLINE
+def p_forControl(p):
+    """forControl : forDec ENDLINE evaluation ENDLINE expr
+                  | forDec ENDLINE evaluation ENDLINE
+                  | ENDLINE evaluation ENDLINE expr
+                  | ENDLINE evaluation ENDLINE
     """
     if len(p) == 6:
         p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4] + " " + p[5]
@@ -110,28 +120,16 @@ def p_for_control(p):
     else:
         p[0] = p[1] + " " + p[2] + " " + p[3]
         
-def p_for_dec(p):
-    'for_dec : var EQUAL val'
+def p_forDec(p):
+    'forDec : var EQUAL evaluation'
     p[0] = p[1] + " " + p[2] + " " + p[3]
 
-def p_eval(p):
-    """eval : val LOGCODE val
-            | LOGCODE BOOL
-            | call
-    """
-    if len(p) == 4:
-        p[0] = p[1] + " " + p[2] + " " + p[3]
-    elif len(p) == 3:
-        p[0] = p[1] + " " + p[2]
-    else:
-        p[0] = p[1]
-
 def p_call(p):
-    'call : VARNAME LPAR func_args RPAR'
+    'call : VARNAME LPAR funcArgs RPAR'
     p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4]
 
-def p_func_args(p):
-    """func_args : val listfunc_args
+def p_funcArgs(p):
+    """funcArgs : val listfuncArgs
                  | 
     """
     if len(p) > 1:
@@ -139,9 +137,9 @@ def p_func_args(p):
     else: 
         p[0] = ""
 
-def p_listfunc_args(p):
-    """listfunc_args : COMMA val listfunc_args
-                     |
+def p_listfuncArgs(p):
+    """listfuncArgs : COMMA val listfuncArgs
+                    |
     """
     if len(p) > 1:
         p[0] = p[1] + " " + p[2] + " " + p[3]
@@ -150,9 +148,7 @@ def p_listfunc_args(p):
 
 def p_expr(p):
     """expr : call
-            | leftVar EQUAL val 
-            | leftVar EQUAL algebra 
-            | leftVar EQUAL eval
+            | leftVar EQUAL evaluation
     """
     if len(p) == 2:
         p[0] = p[1]
@@ -168,20 +164,59 @@ def p_leftVar(p):
     else:
         p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4]
 
-def p_algebra(p):
-    'algebra : val ALGCODE val'
-    p[0] = p[1] + " " + p[2] + " " + p[3]
+def p_evaluation(p):
+    """evaluation : MINUS evaluation %prec UMINUS 
+                  | evaluation PLUS evaluation
+                  | evaluation MINUS evaluation
+                  | evaluation MULT evaluation
+                  | evaluation DIV evaluation
+                  | evaluation POW evaluation
+                  | evaluation MOD evaluation
+                  | evaluation AND evaluation
+                  | evaluation OR evaluation
+                  | evaluation LEQUAL evaluation
+                  | evaluation NEQUAL evaluation
+                  | NOT evaluation
+                  | evaluation GREATER evaluation
+                  | evaluation GREATERE evaluation
+                  | evaluation LOWER evaluation
+                  | evaluation LOWERE evaluation
+                  | val
+    """
+    if len(p) == 4:
+        p[0] = p[1] + " " + p[2] + " " + p[3]
+    elif len(p) == 3:
+        p[0] = p[1] + " " + p[2]
+    else:
+        p[0] = p[1]
 
 def p_declaration(p):
     """declaration : LET var EQUAL val
-                   | LET MUT var EQUAL val"""
-    #for i in range(1,len(p)):
-    #    p[0] + " " += p[i]
+                   | LET MUT var EQUAL val
+                   | LET var EQUAL listInit
+                   | LET MUT var EQUAL listInit"""
     if len(p) == 5:
         p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4]
     else:
         p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4] + " " + p[5]
 
+def p_listInit(p):
+    """ listInit : LBRA listElems RBRA
+                 | LBRA RBRA 
+    """
+    if len(p) == 3:
+        p[0] = p[1] + " " + p[2]
+    else:
+        p[0] = p[1] + " " + p[2] + " " + p[3]
+
+def p_listElems(p):
+    """ listElems : val COMMA listElems
+                  | val
+    """
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = p[1] + " " + p[2] + " " + p[3]
 def p_var(p):
     'var : VARNAME typeAtrib'
     p[0] = p[1] + " " + p[2]
@@ -201,10 +236,10 @@ def p_val(p):
            | STRING
            | BOOLEAN
            | VARNAME
+           | acessList
            | call
     """
     p[0] = p[1]
-
 
 def p_type(p):
     """type : I32
@@ -214,7 +249,7 @@ def p_type(p):
             | BOOL
             | STR
             | list
-            """
+    """
     p[0] = p[1]
 
 def p_list(p):
@@ -222,6 +257,29 @@ def p_list(p):
             | LBRA list COMMA INT RBRA
     """
     p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4] + " " + p[5]
+
+def p_acessList(p):
+    'acessList : VARNAME listLists'
+    p[0] = p[1] + " " + p[2]
+
+def p_listLists(p):
+    """listLists : LBRA index RBRA listLists
+                 | LBRA index RBRA
+    """
+    if len(p) == 4:
+        p[0] = p[1] + " " + p[2] + " " + p[3]
+    else:
+        p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4]
+
+def p_index(p):
+    """ index : VARNAME
+              | INT
+    """
+    p[0] = p[1]
+
+def p_error(p):
+    print(p)
+    raise SyntaxError()
 
 if __name__ == '__main__':
     parser = yacc.yacc()
@@ -235,5 +293,3 @@ if __name__ == '__main__':
     file_out = open("../testing/" + example + "_parse_out.txt", "w")
 
     file_out.write(out)
-
-

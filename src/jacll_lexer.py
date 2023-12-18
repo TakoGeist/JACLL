@@ -17,14 +17,31 @@ reserved = {
     'print' : 'PRINT',
 }
 
-tokens = ['STRING', 'COMMENT', 'ENDLINE', 'EQUAL', 'ALGCODE', 'LOGCODE', 'VARNAME', 'LPAR',
+tokens = ['STRING', 'COMMENT', 'ENDLINE', 'EQUAL', 'VARNAME', 'LPAR',
           'RPAR', 'LBRA', 'RBRA', 'LCURLY', 'RCURLY', 'DDOT', 'COMMA', 'INT', 'FLOAT', 
-          'BOOLEAN'] + list(reserved.values())
+          'BOOLEAN', 'PLUS', 'MINUS', 'MULT', 'DIV', 'POW', 'AND', 'OR', 'LEQUAL',
+          'NEQUAL', 'NOT', 'GREATER', 'GREATERE', 'LOWER', 'LOWERE', 'MOD'
+          ] + list(reserved.values())
 
 t_STRING = r'\"([^"\\]|\\.)*\"' 
 t_INT = r'(\-)?\d+'
-t_ALGCODE = r'(\+|(\-)|\*\*|\*|\/|\%)'
-t_LOGCODE = r'((\=\=)|\!|\~|\&\&|\&|\^|(\|\|)|(\|)|(\<\=)|(\>\=)|(\<)|\>)'
+t_PLUS = r'\+'
+t_MINUS = r'\-'
+t_POW = r'\*\*'
+t_MULT = r'\*'
+t_MOD = r'\%'
+t_DIV = r'\\'
+t_AND = r'\&\&'
+t_OR = r'\|\|'
+t_LEQUAL = r'\=\='
+t_NEQUAL = r'\!\='
+t_NOT = r'\!'
+t_GREATERE = r'\>\='
+t_GREATER = r'\>'
+t_LOWERE = r'\<\='
+t_LOWER = r'\<'
+# t_ALGCODE = r'(\+|(\-)|\*\*|\*|\/|\%)'
+# t_LOGCODE = r'((\=\=)|\!|\~|\&\&|\&|\^|(\|\|)|(\|)|(\<\=)|(\>\=)|(\<)|\>)'
 t_EQUAL = r'\='
 t_ENDLINE = r'\;'
 t_DDOT = r'\:'
@@ -108,3 +125,21 @@ t_ignore = ' \t'
 lexer = lex.lex()
 
 lexer.stack = []
+
+if __name__ == '__main__':
+
+    example = "array"
+
+    data = open("../examples/" + example + ".jacll").read()
+
+    lexer.input(data)
+
+    out = ""
+
+    while s := lexer.token():
+        out += s.type + ' '
+
+    file_out = open("../testing/" + example + "_lex_out.txt", "w")
+
+    file_out.write(out)
+
