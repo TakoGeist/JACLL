@@ -1,8 +1,10 @@
 import ply.yacc as yacc
 from jacll_lexer import tokens
 
-precedence = (('left','GREATERE'),
-            #   (),
+precedence = (
+              ('nonassoc','GREATERE', 'GREATER', 'LOWERE', 
+                          'LOWER', 'LEQUAL', 'NEQUAL'),
+              ('left', 'AND', 'OR'),
               ('right', 'NOT'),
               ('left', 'PLUS', 'MINUS'),
               ('left', 'MULT', 'DIV', 'MOD'),
@@ -169,6 +171,7 @@ def p_leftVar(p):
 
 def p_evaluation(p):
     """evaluation : MINUS evaluation %prec UMINUS 
+                  | LPAR evaluation RPAR
                   | evaluation PLUS evaluation
                   | evaluation MINUS evaluation
                   | evaluation MULT evaluation
