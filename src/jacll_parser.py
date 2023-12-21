@@ -2,9 +2,10 @@ import ply.yacc as yacc
 from jacll_lexer import tokens
 
 precedence = (
-              ('nonassoc','GREATERE', 'GREATER', 'LOWERE', 
-                          'LOWER', 'LEQUAL', 'NEQUAL'),
-              ('left', 'AND', 'OR'),
+              ('left', 'OR'),
+              ('left', 'AND'),
+              ('nonassoc', 'LEQUAL', 'NEQUAL'),
+              ('nonassoc','GREATERE', 'GREATER', 'LOWERE', 'LOWER'),
               ('right', 'NOT'),
               ('left', 'PLUS', 'MINUS'),
               ('left', 'MULT', 'DIV', 'MOD'),
