@@ -7,10 +7,8 @@ reserved = {
     'else' : 'ELSE',
     'func' : 'FUNC',
     'mut' : 'MUT',
-    'i32' : 'I32',
-    'i64' : 'I64',
-    'f32' : 'F32',
-    'f64' : 'F64',
+    'int' : 'INTT',
+    'float' : 'FLOATT',
     'bool' : 'BOOL',
     'str' : 'STR',
     'return' : 'RETURN',
@@ -126,20 +124,4 @@ lexer = lex.lex()
 
 lexer.stack = []
 
-if __name__ == '__main__':
-
-    example = "array"
-
-    data = open("../examples/" + example + ".jacll").read()
-
-    lexer.input(data)
-
-    out = ""
-
-    while s := lexer.token():
-        out += s.type + ' '
-
-    file_out = open("../testing/" + example + "_lex_out.txt", "w")
-
-    file_out.write(out)
 

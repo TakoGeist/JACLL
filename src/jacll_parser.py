@@ -251,10 +251,8 @@ def p_val(p):
     p[0] = p[1]
 
 def p_type(p):
-    """type : I32
-            | I64
-            | F32
-            | F64
+    """type : INTT
+            | FLOATT
             | BOOL
             | STR
             | list
@@ -305,7 +303,7 @@ def p_error(p):
 if __name__ == '__main__':
     parser = yacc.yacc()
 
-    example = "function_call"
+    example = "sum"
 
     data = open("../examples/" + example + ".jacll").read()
 

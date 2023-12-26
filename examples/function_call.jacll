@@ -5,11 +5,11 @@
     In that case nothing is written.
 */
 
-func inner_prod(l1 : [i32], l2: [i32], N:i32) => i32 {
+func inner_prod(l1 : [int], l2: [int], N:int) => int {
     
-    let mut result:i32 = 0;
+    let mut result:int = 0;
 
-    for i:i32 = 0; i<5; i = i+1 {
+    for i:int = 0; i<5; i = i+1 {
         result = result + l1[i] * l2[i];
     }
 
@@ -18,8 +18,8 @@ func inner_prod(l1 : [i32], l2: [i32], N:i32) => i32 {
 
 func main() {
 
-    let l1:[i32,5] = [1,2,3,4,5];
-    let l2:[i32,5] = [6,7,8,9,10];
+    let l1:[int,5] = [1,2,3,4,5];
+    let l2:[int,5] = [6,7,8,9,10];
 
     let result = inner_prod(l1,l2,5);
     
