@@ -9,8 +9,8 @@ precedence = (
               ('right', 'NOT'),
               ('left', 'PLUS', 'MINUS'),
               ('left', 'MULT', 'DIV', 'MOD'),
-              ('right', 'POW'),
               ('right', 'UMINUS'),
+              ('right', 'POW'),
               ('left', 'LPAR', 'RPAR'),
               )
 
