@@ -139,7 +139,7 @@ def p_funcArgs(p):
                  | 
     """
     if len(p) > 1:
-        p[0] = p[1] + " " + p[2] + " " + p[3]
+        p[0] = p[1] + " " + p[2]
     else: 
         p[0] = ""
 
@@ -258,8 +258,20 @@ def p_type(p):
             | BOOL
             | STR
             | list
+            | flist
     """
     p[0] = p[1]
+
+def p_flist(p):
+    """flist : LBRA type RBRA flist
+             | LBRA type RBRA
+    """
+
+    if len(p) == 4:
+        p[0] = p[1] + " " + p[2] + " " + p[3]
+    else:
+        p[0] = p[1] + " " + p[2] + " " + p[3] + " " + p[4]
+    
 
 def p_list(p):
     """list : LBRA type COMMA INT RBRA
@@ -293,7 +305,7 @@ def p_error(p):
 if __name__ == '__main__':
     parser = yacc.yacc()
 
-    example = "array"
+    example = "function_call"
 
     data = open("../examples/" + example + ".jacll").read()
 
