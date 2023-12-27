@@ -1,11 +1,7 @@
 
-/*
-    For loops declared control variables are mutable by default as is their intended use
-*/
-
 
 func main(){
-    let mut x = 3;
+    let x = 3;
     let y = x + 10;
 
     if x >= 0 {

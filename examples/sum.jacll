@@ -1,21 +1,17 @@
 
 /*
-    Declarations are immutable by default, led by the 'let' keyword and followed by an optional 
+    Declarations are led by the 'let' keyword and followed by an optional 
     type declaration and a equal sign '=' such that the following are equivalent
-        let x: int; // Declares an immutable variable x with type int default value (0)
-        let x: int = 0; // Declares an immutable variable x with type int and value 0
-        let x = 0; // Declares an immutable variable x with implicit type int and value 0
-
-    For declaring mutable variables the declaration must employ the 'mut' keyword and follow the 
-    method above
-        let mut x: int = 0; // Declares a mutable variable x with type int and value 0
+        let x: int; // Declares a variable x with type int default value (0)
+        let x: int = 0; // Declares a variable x with type int and value 0
+        let x = 0; // Declares a variable x with implicit type int and value 0
 */
 
 func main(){
 
     let x: int = 2;
     let y: int = 3;
-    let mut z: int = 0;
+    let x: int = 0;
 
     z = x + y;
 
@@ -23,7 +19,7 @@ func main(){
 
     let a: float = 2.;
     let b: float = .5;
-    let mut c: float = 0.0;
+    let c: float = 0.0;
 
     c = a + b;
 

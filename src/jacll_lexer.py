@@ -21,7 +21,6 @@ tokens = ['STRING', 'COMMENT', 'ENDLINE', 'EQUAL', 'VARNAME', 'LPAR', 'RPAR',
           ] + list(reserved.values())
 
 t_STRING = r'\"([^"\\]|\\.)*\"' 
-t_INTEGER = r'\d+'
 t_PLUS = r'\+'
 t_MINUS = r'\-'
 t_POW = r'\*\*'
@@ -99,6 +98,12 @@ def t_RCURLY(t):
 
 def t_FLOATING(t):
     r'(\d+\.\d*|\d*\.\d+)'
+    t.value = float(t.value)
+    return t
+
+def t_INTEGER(t):
+    r'\d+'
+    t.value = int(t.value)
     return t
 
 def t_VARNAME(t):
@@ -127,4 +132,23 @@ lexer = lex.lex()
 
 lexer.stack = []
 
+if __name__ == '__main__':
 
+    example = 'function_call'
+
+    data = open('../examples/' + example + '.jacll').read()
+
+    out = ""
+
+    lexer.input(data)
+
+    while tok := lexer.token():
+        out += str(tok.value) + ' '
+        if (tok.value in [';','{','}']):
+            out += '\n'
+
+    print(out)
+
+    # file_out = open("../testing/" + example + "_parse_out.txt", "w")
+
+    # file_out.write(out)
