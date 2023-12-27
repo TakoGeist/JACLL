@@ -6,23 +6,22 @@ reserved = {
     'if' : 'IF',
     'else' : 'ELSE',
     'func' : 'FUNC',
-    'mut' : 'MUT',
-    'int' : 'INTT',
-    'float' : 'FLOATT',
+    'int' : 'INT',
+    'float' : 'FLOAT',
     'bool' : 'BOOL',
     'str' : 'STR',
     'return' : 'RETURN',
     'print' : 'PRINT',
 }
 
-tokens = ['STRING', 'COMMENT', 'ENDLINE', 'EQUAL', 'VARNAME', 'LPAR',
-          'RPAR', 'LBRA', 'RBRA', 'LCURLY', 'RCURLY', 'DDOT', 'COMMA', 'INT', 'FLOAT', 
+tokens = ['STRING', 'COMMENT', 'ENDLINE', 'EQUAL', 'VARNAME', 'LPAR', 'RPAR', 
+          'LBRA', 'RBRA', 'LCURLY', 'RCURLY', 'DDOT', 'COMMA', 'INTEGER','FLOATING', 
           'BOOLEAN', 'PLUS', 'MINUS', 'MULT', 'DIV', 'POW', 'AND', 'OR', 'LEQUAL',
           'NEQUAL', 'NOT', 'GREATER', 'GREATERE', 'LOWER', 'LOWERE', 'MOD'
           ] + list(reserved.values())
 
 t_STRING = r'\"([^"\\]|\\.)*\"' 
-t_INT = r'(\-)?\d+'
+t_INTEGER = r'\d+'
 t_PLUS = r'\+'
 t_MINUS = r'\-'
 t_POW = r'\*\*'
@@ -44,6 +43,10 @@ t_EQUAL = r'\='
 t_ENDLINE = r'\;'
 t_DDOT = r'\:'
 t_COMMA = r'\,'
+
+def t_BOOLEAN(t):
+    r'true|false'
+    return t
 
 def t_newline(t):
     r'\n+'
@@ -94,8 +97,8 @@ def t_RCURLY(t):
         raise SyntaxError(f'Found \'}}\' at line {t.lineno} but was never open')
     return t
 
-def t_FLOAT(t):
-    r'(\-)?(\d+\.\d*|\d*\.\d+)'
+def t_FLOATING(t):
+    r'(\d+\.\d*|\d*\.\d+)'
     return t
 
 def t_VARNAME(t):
