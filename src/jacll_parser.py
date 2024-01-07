@@ -1,6 +1,7 @@
 from utils import *
+from copy import deepcopy
 import ply.yacc as yacc
-from jacll_lexer import tokens
+from jacll_lexer import tokens, lexer
 
 precedence = (
               ('left', 'OR'),
@@ -18,33 +19,42 @@ precedence = (
 def p_prog(p):
     """prog : listFuncs
     """
-    p[0] = RoseTree('prog', Prog('prog'), p[1])
+    p[0] = RoseTree('Prog', p[1])
         
 def p_listFuncs(p):
-    """listFuncs : func listFuncs
-                 | func"""
-    if p[1].node.name in p.parser.functions:
-        raise SyntaxError(f"Previous declaration of function {p[1].name} found.")
-    p.parser.functions[p[1].node.name] = p[1].node
-    if len(p) > 2:
-        p[0] = [p[1]] + p[2]
+    """listFuncs : funcHeader funcBody listFuncs
+                 | funcHeader funcBody"""
+
+    if p[1].children[0] != None and p[2][-1].children[0] != p[1].children[0]:
+        raise SyntaxError(f"Invalid return type found for function {p[1].children[1]}. Expected type {p[1].children[0]} but found {p[2][-1].children[0]} instead.")
+    
+    p[1].add_child(p[2])
+    if len(p) > 3:
+        p[0] = [p[1]] + p[3]
     else:
         p[0] = [p[1]]
 
-def p_func(p):
-    """func : FUNC VARNAME LPAR args RPAR output LCURLY funcCode RCURLY"""
-    p.parser.scope.update(dict(p[4]))
-    p[0] = RoseTree('func', 
-                    Func(p[2], p[4], p[6]),
-                    p[8])
-    for i in p[0].node.scope:
-        p.parser.scope.pop(i)
-    print(p[0])
+
+def p_funcHeader(p):
+    """funcHeader : FUNC VARNAME LPAR args RPAR output"""
+    p.parser.scope.update(dict([(elem.children[1], elem) for elem in p[4]]))
+    if p[2] in p.parser.functions:
+        raise SyntaxError(f"Previous declaration of function {p[2]} found.")
+    
+    p[0] = RoseTree('func', [p[6], p[2], p[4]])
+
+    p.parser.functions[p[2]] = p[0]
+
+def p_funcBody(p):
+    """funcBody : LCURLY funcCode RCURLY"""
+    p[0] = p[2]
+    p.parser.scope = {}
 
 def p_return(p):
     """output : EQUAL GREATER type
               | 
     """
+    
     if len(p) > 1:
         p[0] = p[3]
     else: 
@@ -54,15 +64,17 @@ def p_args(p):
     """ args : var listarg
              |
     """
+    
     if len(p) > 1:
         p[0] = [p[1]] + p[2]
-    else: 
+    else:
         p[0] = []
 
 def p_listarg(p):
     """listarg : COMMA var listarg
                |
     """
+    
     if len(p) > 1:
         p[0] = [p[2]] + p[3]
     else: 
@@ -79,7 +91,10 @@ def p_code(p):
              |
     """
     if len(p) == 4:
-        p[0] = [p[1]] + p[3]
+        if p[1] != []:
+            p[0] = [p[1]] + p[3]
+        else:
+            p[0] = p[3]
     elif len(p) == 3:
         p[0] = [p[1]] + p[2]
     else: 
@@ -107,19 +122,25 @@ def p_line(p):
 
 def p_print(p):
     """print : PRINT LPAR val RPAR"""
-    p[0] = Print(p[3])
+    p[0] = RoseTree('print', [p[3]])
 
 def p_ifClause(p):
     """ifClause : IF evaluation LCURLY code RCURLY ELSE LCURLY code RCURLY
                 | IF evaluation LCURLY code RCURLY"""
+    if p[2].children[0] != DataType.BOOL:
+        raise SyntaxError("Invalid expression found. Does not evaluate to 'bool'.")
+    
     if len(p) > 6:
-        p[0] = IfClause(p[1], p[3], p[8])
+        p[0] = RoseTree('if', [p[2], p[4], p[8]])
     else:
-        p[0] = IfClause(p[1], p[2])
+        p[0] = RoseTree('if', [p[2], p[4], None])
 
 def p_forLoop(p):
     """forLoop : FOR forControl LCURLY code RCURLY"""
-    p[0] = RoseTree('for', ForLoop(p[2][1], p[2][0], p[2][2]), p[4])
+    if p[2][1].children[0] != DataType.BOOL:
+        raise SyntaxError("Invalid expression found. Does not evaluate to 'bool'.")
+    
+    p[0] = RoseTree('for', [p[2][0], p[2][1], p[2][2], p[4]])
 
 def p_forControl(p):
     """forControl : forDec ENDLINE evaluation ENDLINE expr
@@ -139,33 +160,31 @@ def p_forControl(p):
  
 def p_forDec(p):
     """forDec : var EQUAL evaluation"""
-    if var := p.parser.scope.get(p[1].name):
-        if p[3].type != var.type:
-            raise SyntaxError(f"Mismatched types. Expected {p[1].type} but got {p[3].type} instead.")
-        var.value = p[3].value
-        p[0] = var
-        p.parse.scope[p[1][0]] = var
+
+    if var := p.parser.scope.get(p[1].children[1]):
+        if var.children[0] != p[3].children[0]: 
+            raise SyntaxError(f"Mismatched types. Expected {var.children[0]} but got {p[3].children[0]} instead.")
+        p[0] = RoseTree('atrib', [var.children[0], var.children[1], p[3]])
     else:
-        if p[1].type == None:
-            p[1].type = p[3].type
-        if p[1].type not in [DataType.INT, DataType.FLOAT]:
-            raise SyntaxError("Illegal type used. Consider switching to integer or float.")
-        p[0] = Var(p[1].name, p[1].type, p[3].value,True)
+        if p[1].children[0] != None and p[1].children[0] != p[3].children[0]:
+            raise SyntaxError(f"Mismatched types. Expected {p[1].children[0]} but got {p[3].children[0]} instead.")
+        p[0] = RoseTree('init', [p[3].children[0], p[1].children[1], p[3].children])
+        p.parser.scope[p[1].children[1]] = p[0]
 
 def p_call(p):
     """call : VARNAME LPAR funcArgs RPAR"""
+
     if func := p.parser.functions.get(p[1]):
-        if len(func.args) != len(p[3]):
-            raise SyntaxError(f"""Mismatched number of arguments provided at function call. 
-Expected {len(func.args)} but got {len(p[3])}.""")
-        for idx in range(len(func.args)):
-            if func.args[idx].type != p[3][idx].type:
-                raise SyntaxError(f"""Mismatched type for argument {func.args[idx].name} of function {func.name}.
-Expected {func.args[idx].type} but got {p[3][idx].type} instead.""")
-        p[0] = Call(p[1], p[3], func.output)
+        if len(func.children[2]) != len(p[3]):
+            raise SyntaxError(f"""Mismatched number of arguments provided at function call. Expected {len(func.children[2])} but got {len(p[3])}.""")
+        for idx in range(len(func.children[2])):
+            if func.children[2][idx].children[0] != p[3][idx].children[0]:
+                raise SyntaxError(f"""Mismatched type for argument {func.children[2][idx].children[1]} of function {func.children[1]}.
+Expected {func.children[2][idx].children[0]} but got {p[3][idx].children[0]} instead.""")
+        p[0] = RoseTree('call', [func.children[0], func.children[1], p[3]])
     else:
         raise SyntaxError(f"""Function call made with an undefined function.
-If the function is present consider moving to before the current function.""")
+If the function is present consider moving it's declaration to before the current function.""")
 
 def p_funcArgs(p):
     """funcArgs : evaluation listfuncArgs
@@ -192,30 +211,33 @@ def p_expr(p):
     if len(p) == 2:
         p[0] = p[1]
     else:
-        p[0] = RoseTree('expr', None, [p[1], p[3]])
+        if p[1].children[0] != p[3].children[0]:
+            raise SyntaxError(f"Mismatched types. Expected {p[1].children[0]} but got {p[3].children[0]} instead.")
+        p[0] = RoseTree('atrib', [p[1].children[0], p[1].children[1], p[3]])
+
+def p_leftVar_list(p):
+    """leftVar : accessList
+    """
+    p[0] = p[1]
 
 def p_leftVar(p):
-    """leftVar : VARNAME LBRA INTEGER RBRA
-               | VARNAME
+    """leftVar : VARNAME
     """
     if p[1] not in p.parser.scope:
         raise SyntaxError(f"Use of undeclared variable {p[1]}.")
-    var = p.parser.scope.get(p[1]).__copy__()
-    var.value = None
-    if len(p) == 5:
-        if var.type != DataType.LIST:
-            raise SyntaxError(f"{var.name} is not an array.")
-        var.index = p[3]
-    p[0] = var
+    p[0] = RoseTree('var', [p.parser.scope[p[1]].children[0], p.parser.scope[p[1]].children[1]])
 
 def p_evaluation1(p):
     """evaluation : MINUS evaluation %prec UMINUS
                   | NOT evaluation
     """
     if p[1] == '-':
-        p[1] = RoseTree('neg', None, [p[2]])
+        p[0] = RoseTree('neg', [None, p[2]])
     else:
-        p[1] = RoseTree('not', None, [p[2]])
+        p[0] = RoseTree('not', [None, p[2]])
+    error = p[0].validate_op()
+    if error != 0:
+        raise error
 
 def p_evaluation0(p):
     """evaluation : LPAR evaluation RPAR
@@ -241,92 +263,108 @@ def p_evaluation(p):
                   | evaluation LOWER evaluation
                   | evaluation LOWERE evaluation
     """
-    p[0] = RoseTree('BinOP', p[2], [p[1], p[3]])
+    p[0] = RoseTree('BinOp', [None, p[2], p[1], p[3]])
+    error = p[0].validate_op()
 
-def p_declaration_implicit(p):
-    """declaration : LET var"""
-    if p[2].name in p.parser.scope:
-        raise SyntaxError(f"Redeclaration of variable {p[2].name}")
-    if p[2].type == DataType.LIST:
-        p[0] = Var(p[2].name, p[2].type, [0]*p[2].row, _row=p[2].row)
+    if error != 0:
+        raise error
+
+def p_declaration_list(p):
+    """declaration : LET var EQUAL listInit
+    """
+    if p[2].children[1] in p.parser.scope:
+        raise SyntaxError(f"Redeclaration of variable {p[2].children[1]}")
+    
+    if len(p[2].children) == 1:
+        raise SyntaxError(f"Mismatched data types. Expected {p[2].children[0]} but got 'array' instead.")
+
+    line = 0
+    if len(p[2].children[0][1]) == 3:
+        line = p[2].children[0][1].pop(2)
+
+    if p[4].children[1] == 0:
+        if p[2].children[0][0] == DataType.STR:
+            raise SyntaxError(f"Invalid initialization of variable {p[2].children[1]}. Value must not be empty.")
+        p[0] = RoseTree('init', [DataType.LIST, p[2].children[1], [0], p[2].children[0][1]])
+        p.parser.scope[p[2].children[1]] = p[0]
     else:
-        p[0] = Var(p[2].name, p[2].type, 0)
-    p.parser.scope[p[2].name] = p[0]
+        if p[2].children[0][1] != None and p[2].children[0][1][1] != len(p[4].children[1]):
+            raise SyntaxError(f"Mismatched sizes on {p[2].children[1]} declaration. Expected size {p[2].children[0][1][1]} but got {len(p[4].children[1])} instead.")
+        p[0] = RoseTree('init', [DataType.LIST, p[2].children[1], p[4].children[1]])
+        scope = deepcopy(p[0])
+        scope.add_child(line)
+        p.parser.scope[p[2].children[1]] = scope
 
 def p_declaration(p):
     """declaration : LET var EQUAL evaluation
-                   | LET var EQUAL listInit
-                   """
-    if p[2].name in p.parser.scope:
-        raise SyntaxError(f"Redeclaration of variable {p[2].name}")
-    if p[2].type == DataType.LIST:
-        if p[4].type != DataType.LIST:
-            raise SyntaxError(f"Mismatched data types. Expected LIST but got {p[4].type} instead.")
-        if p[2].row != p[4].row and p[4].row != 1 and p[4].row != 0:
-            raise SyntaxError(f"Mismatched size on array declaration. Expected {p[2].row} but got {p[4].row} instead.")
-        if p[4].column == None:
-            if p[4].row == 1:
-                p[0] = Var(p[2].name, p[2].type, p[4].value, _row= p[2].row)
-            else:    
-                p[0] = Var(p[2].name, p[2].type, p[4].value, _row= p[2].row)
-        else:
-            p[0] = Var(p[2].name, p[2].type, p[4].value, _row= p[2].row, _column= p[2]._column)
+    """
+
+    if p[2].children[1] in p.parser.scope:
+        raise SyntaxError(f"Redeclaration of variable {p[2].children[1]}.")
+    
+
+    if p[2].children[0] != None and p[2].children[0] != p[4].children[0]:
+        raise SyntaxError(f"Mismatched data types. Expected '{p[2].children[0]}' but got '{p[4].children[0]}' instead.")
 
 
-    else:
-        p[0] = Var(p[2].name, p[2].type, p[4])
-    p.parser.scope[p[2].name] = p[0]
+    p[0] = RoseTree('init', [p[4].children[0], p[2].children[1], p[4].children[1]])
+    p.parser.scope[p[2].children[1]] = p[0]
 
-
-
-    #if p[2].name in p.parser.scope:
-    #    raise SyntaxError(f"Redeclaration of variable {p[2].name}")
-    #if p[2].type == DataType.LIST:
-    #    if p[2].row != p[4].row and p[4].row != 1 and p[4].row != 0:
-    #        raise SyntaxError(f"Mismatched size on array declaration. Expected {p[2].row} but got {p[4].row} instead.")
-    #    if p[4].row == 1:
-    #        p[0] = Var(p[2].name, p[2].type, p[4].value*p[2].row, _row= p[2].row)
-    #    else:    
-    #        p[0] = Var(p[2].name, p[2].type, p[4].value, _row= p[2].row)
-    #else:
-    #    p[0] = Var(p[2].name, p[2].type, p[4])
-    #p.parser.scope[p[2].name] = p[0]
+def p_declaration_implicit(p):
+    """declaration : LET var"""
+    if p[2].children[1] in p.parser.scope:
+        raise SyntaxError(f"Redeclaration of variable {p[2].children[1]}")
+    
+    p.parser.scope[p[2].children[1]] = p[2]
+    p[0] = p[2]
 
 def p_listInit(p):
-    """ listInit : LBRA listElems RBRA
+    """ listInit : listList
                  | LBRA RBRA
     """
     if len(p) == 3:
-        p[0] = Var(None, DataType.LIST, 0)
+        p[0] = RoseTree("val", [DataType.INT, 0])
     else:
-        e1 = p[3][0]
-        for i in range(len(p[3])):
-            if type(p[3][i]) != type(e1):
-                raise SyntaxError(f"Array elements have different types.")
-            elif type(e1) == list:
-                if len(e1) != len(p[3][i]):
-                    raise SyntaxError(f"Array elements have different sizes.")
-            else:
-                for j in range(1,len(e1)):
-                    if type(e1[0]) != type(e1[j]) or type(e1[0]) != type(p[3][i][j]):
-                        raise SyntaxError(f"Array elements have different types.")
-                    
-        column = len(e1) if type(e1) == type([]) else None
-        p[0] = Var(None, DataType.LIST, p[2], _row= len(p[2]), _column = column)
+        if type(p[1][0]) == list:
+            flatten = [elem for line in p[1] for elem in line]
+            diff = len(set(map(lambda x: len(x), p[1])))
+        else:
+            flatten = [elem for elem in p[1]]
+            diff = 1
+        if sum(map(lambda x: x.children[0], flatten)) // flatten[0].children[0] != len(flatten):
+            raise SyntaxError(f"Array elements have different types.")
+        if diff != 1:
+            raise SyntaxError(f"Array elements have different sizes.")
+        
+        p[0] = RoseTree("val", [flatten[0].children[0], flatten])
+
+def p_listList(p):
+    """ listList : LBRA list2Deep RBRA 
+                 | LBRA listElems RBRA
+    """
+    p[0] = p[2]
+
+def p_list2Deep(p):
+    """ list2Deep : list2Deep COMMA LBRA listElems RBRA
+                  | LBRA listElems RBRA
+    """
+    if len(p) == 4:
+        p[0] = [p[2]]
+    else:
+        p[0] = p[1] + [p[4]]
 
 def p_listElems(p):
-    """ listElems : listInit COMMA listElems
-                  | val COMMA listElems
+    """ listElems : listElems COMMA val
                   | val
     """
     if len(p) == 2:
         p[0] = [p[1]]
     else:
-        p[0] = [p[1]] + p[3]
+        p[0] = p[1] + [p[3]]
         
 def p_var(p):
     """var : VARNAME typeAtrib"""
-    p[0] = Var(p[1], p[2], None)
+    p[0] = RoseTree('var', [p[2], p[1]])
 
 def p_typeAtrib(p):
     """typeAtrib : DDOT type
@@ -339,90 +377,91 @@ def p_typeAtrib(p):
 
 def p_val_var(p):
     """val : VARNAME"""
+
     if p[1] not in p.parser.scope:
         raise SyntaxError(f"Use of undeclared variable {p[1]}.")
-    p[0] = p.parser.scope[p[1]].__copy__()
+
+    p[0] = RoseTree('val', [p.parser.scope[p[1]].children[0], p[1]])
 
 def p_val(p):
     """val : INTEGER
            | FLOATING
            | STRING
            | BOOLEAN
-           | acessList
+           | accessList
            | call
     """
-    type = DataType.inferetype(p[1], p.parser.scope)
-    p[0] = Var(None, type, p[1])
+    type = DataType.inferetype(p[1])
+    p[0] = RoseTree('val', [type, p[1]])
 
 def p_type(p):
     """type : INT
             | FLOAT
             | BOOL
             | STR
-            | list
             | flist
     """
     p[0] = DataType.datatype(p[1])
+
+def p_type_list(p):
+    """type : list
+    """
+    p[0] = [DataType.LIST, p[1]]
 
 def p_flist(p):
     """flist : LBRA type RBRA flist
              | LBRA type RBRA
     """
 
-    p[0] = "list"
+    p[0] = "list" 
+
+def p_list_rec(p):
+    """list : LBRA LBRA type COMMA INTEGER RBRA COMMA INTEGER RBRA
+    """
+    p[0] = [p[3], p[5] * p[8], p[5]]
 
 def p_list(p):
     """list : LBRA type COMMA INTEGER RBRA
-            | LBRA list COMMA INTEGER RBRA
     """
-    p[0] = "list"
+    p[0] = [p[2], p[4]]
 
-def p_acessList(p):
-    """acessList : VARNAME listIndex listIndex
+def p_accessList(p):
+    """accessList : VARNAME listIndex listIndex
                  | VARNAME listIndex"""
-    if var := p.parser.scope.get(p[1]):
-        if var.type != DataType.LIST:
-            raise SyntaxError(f"{var.name} is not an array.")
-        p[0] = var.__copy__()
-        if len(p) == 3:
-            if var.column != None:
-                p[0].column = None
-            p[0].value = p[0].value[p[2]]
-            p[0].index = p[2]
-        else:
-            if var.column == None:
-                raise SyntaxError(f"Illegal indexing. Variable {p[1]}{p[2]} is not an array.")   
-            p[0].index = RoseTree('BinOp',
-                                  '+',
-                                  [RoseTree(
-                                      'BinOp', 
-                                      '*',
-                                      [p[2], p[0].row]),
-                                  p[3]])
-    else:
+
+    if p[1] not in p.parser.scope:
         raise SyntaxError(f"Use of undeclared variable {p[1]}")
+    
+    if p.parser.scope[p[1]].children[0] != DataType.LIST:
+        raise SyntaxError(f"{p.parser.scope[p[1]].children[1]} of type {p.parser.scope[p[1]].children[0]} doesn't allow indexing.")
+
+    if len(p) == 4:
+        p[0] = RoseTree('varList', 
+                        [p.parser.scope[p[1]].children[0], 
+                         RoseTree('BinOp', 
+                            [DataType.INT, 
+                            '+', 
+                            RoseTree('BinOp', 
+                                     [DataType.INT,
+                                      '*', 
+                                      p.parser.scope[p[1]].children[-1], 
+                                      p[2]
+                                     ])
+                            ]), 
+                         p[3]])
+    else:
+        p[0] = RoseTree('varList', [p.parser.scope[p[1]].children[0], p[2]])
 
 def p_listIndex(p):
-    """listIndex : LBRA index RBRA
+    """listIndex : LBRA evaluation RBRA
     """
+    if p[2].children[0] != DataType.INT:
+        raise SyntaxError(f"Cannot use {p[2].children[0]} to index 'array'. Consider using 'int' instead.")
     p[0] = p[2]
-
-def p_index_var(p):
-    """ index : VARNAME
-    """
-    if var := p.parser.scope.get(p[1]):
-        p[0] = var.__copy__()
-    else: 
-        raise SyntaxError(f"Use of undeclared variable {p[1]}.")
-
-def p_index_int(p):
-    """ index : INTEGER
-    """
-    p[0] = Var(None, DataType.INT, p[1])
 
 def p_error(p):
     print(p)
-    raise SyntaxError()
+    quit()
 
 parser = yacc.yacc()
 
@@ -431,14 +470,18 @@ parser.functions = {}
 
 if __name__ == '__main__':
 
-    example = 'sum'
+    examples = ['sum', 'array', 'control_flow', 'function_call']
+    
+    for example in examples:
 
-    data = open('../examples/' + example + '.jacll').read()
+        data = open('../examples/' + example + '.jacll').read()
 
-    out = parser.parse(data)
+        out = parser.parse(data, lexer= lexer, debug= False)
 
-    # print(out)
+        parser.scope = {}
+        parser.functions = {}
+        # print(out)
 
-    file_out = open("../testing/" + example + "_parse_tree.txt", "w")
-
-    file_out.write(out.__str__())
+        file_out = open("../testing/" + example + "_parse_tree.txt", "w")
+        file_out.write(out.__str__())
+        file_out.close()

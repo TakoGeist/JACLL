@@ -10,8 +10,8 @@
 func main(){
 
     let x: int = 2;
-    let y: int = 3;
-    let x: int = 0;
+    let y: int = -3;
+    let z: int = 0;
 
     z = x + y;
 
