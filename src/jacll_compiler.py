@@ -239,7 +239,7 @@ def parse_if(tree, symbol_table):
         label2 = str(label_counter) + 'L'
         label_counter += 1
         out += bin_op(tree.children[0],symbol_table)
-        out += 'jz ' + label2 + '\n'
+        out += 'jz ' + label1 + '\n'
         out += line(tree.children[1][0], symbol_table)
         out += 'jump ' + label2 + '\n'
         out += label1 + ':\n'

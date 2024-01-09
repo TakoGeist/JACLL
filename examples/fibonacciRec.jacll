@@ -6,8 +6,10 @@ func fibonacci(x: int) => int{
     if x == 1{
         res = 1;
     }
-    if x != 1 && x != 0{
-       res = fibonacci(x - 1) + fibonacci(x - 2);
+    else {
+        if x != 0{
+           res = fibonacci(x - 1) + fibonacci(x - 2);
+        }
     }
 
     return res;
