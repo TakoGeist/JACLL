@@ -1,0 +1,43 @@
+start
+pusha main
+call
+stop
+
+main:
+pushi 1
+pushi 2
+pushi 3
+pushi 4
+pushi 5
+pushi 0
+pushfp
+pushi 2
+pushi 0
+add
+read
+atoi
+storen
+pushfp
+pushi 5
+pushfp
+pushi 2
+pushi 0
+add
+loadn
+pushi 2
+add
+storen
+pushfp
+pushi 2
+pushi 0
+add
+loadn
+writei
+writeln
+pushl 5
+writei
+writeln
+pop 1
+return
+
+

@@ -45,9 +45,12 @@ def get_val(tree, symbol_table, _type= False):
     return out
 
 def get_address(tree, symbol_table, _single= False):
+    if type(tree) == str:
+        return 'pushfp\npush' + symbol_table[tree][0].terminator() + ' ' + str(symbol_table[tree][1]) + '\n'
     if tree.type == 'val':
-        out = ''
-        out += 'pushfp\npushi ' + str(symbol_table[tree.name()][1]) + '\n'
+        out = 'pushfp\npushi ' + str(symbol_table[tree.name()][1]) + '\n'
+    elif tree.type == 'var':
+        out = 'pushfp\npushi ' + str(symbol_table[tree.name()][1]) + '\n'
     else:
         if symbol_table[tree.name()][1] >= 0:
             out = 'pushfp\n'
@@ -159,7 +162,7 @@ def body(tree, symbol_table):
         
 def init(tree,symbol_table):
     symbol_table.add(tree)
-    
+
     if type(tree.children[2]) == RoseTree and tree.children[2].type == 'neg':
         return bin_op(tree.children[2],symbol_table)
 
@@ -176,8 +179,11 @@ def init(tree,symbol_table):
         if len(tree.children) == 4:
             out += 'pushn ' + str(tree.children[3]) + '\n'
         else:
-            for elem in tree.children[2]:
-                out += 'push' + type_ + ' ' + str(elem.val()) + '\n'
+            if len(tree.children[2]) != tree.children[3]:
+                out += 'pushn ' + str(tree.children[3]) + '\n'
+            else:
+                for elem in tree.children[2]:
+                    out += 'push' + type_ + ' ' + str(elem.val()) + '\n'
         return out
 
     if type(tree.children[2]) == RoseTree:
@@ -196,7 +202,9 @@ def atrib(tree,symbol_table):
     else:
         out = bin_op(tree.children[2], symbol_table)
 
-    return out + 'storel ' + str(symbol_table[tree.children[1]][1]) + '\n'
+    address = get_address(tree.children[1], symbol_table)
+
+    return address + out + 'storen\n'
     
 def parse_for(tree, symbol_table):
     global label_counter

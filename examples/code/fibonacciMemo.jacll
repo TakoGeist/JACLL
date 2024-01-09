@@ -1,0 +1,32 @@
+
+
+func fibonacci(x: int, memo: [int]) => int{
+    
+    let res: int = 0;
+
+    if memo[x] > 0{
+        res = memo[x];
+    }
+    else{
+        res = fibonacci(x - 1, memo) + fibonacci(x - 2, memo);
+        memo[x] = res;
+    }
+
+    return res;
+}
+
+func main(){
+
+    let num;
+
+    let memo: [int, 100] = [];
+
+    memo[1] = 1;
+    memo[2] = 1;
+
+    read(num);
+
+    print(fibonacci(num, memo));
+
+    return;
+}

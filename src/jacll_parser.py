@@ -246,9 +246,9 @@ def p_expr(p):
     if len(p) == 2:
         p[0] = p[1]
     else:
-        if p[1].children[0] != p[3].children[0]:
-            raise SyntaxError(f"Mismatched types. Expected {p[1].children[0]} but got {p[3].children[0]} instead.")
-        p[0] = RoseTree('atrib', [p[1].children[0], p[1].children[1], p[3]])
+        if p[1].get_elem_type() != p[3].get_elem_type():
+            raise SyntaxError(f"Mismatched types. Expected {p[1].get_elem_type()} but got {p[3].get_elem_type()} instead.")
+        p[0] = RoseTree('atrib', [p[1].get_type(), p[1], p[3]])
 
 def p_leftVar_list(p):
     """leftVar : accessList
@@ -320,7 +320,7 @@ def p_declaration_list(p):
     if p[4].children[1] == 0:
         if p[2].children[0][0] == DataType.STR:
             raise SyntaxError(f"Invalid initialization of variable {p[2].children[1]}. Value must not be empty.")
-        p[0] = RoseTree('init', [DataType.LIST, p[2].children[1], [0], p[2].children[0][1], p[2].children[0][0]])
+        p[0] = RoseTree('init', [DataType.LIST, p[2].children[1], [0], p[2].children[0][1][1], p[2].get_type()])
         p.parser.scope[p[2].children[1]] = p[0]
     else:
         if p[2].children[0][1] != None and p[2].children[0][1][1] != len(p[4].children[1]):
@@ -359,6 +359,7 @@ def p_listInit(p):
     """ listInit : listList
                  | LBRA RBRA
     """
+
     if len(p) == 3:
         p[0] = RoseTree("val", [DataType.INT, 0])
     else:
@@ -508,9 +509,9 @@ def p_accessList(p):
                          )
     else:
         if len(p.parser.scope[p[1]].children) > 5:
-            p[0] = RoseTree('valList', [p.parser.scope[p[1]].children[0], p[1], p[2], p.parser.scope[p[1]].children[4]])
+            p[0] = RoseTree('valList', [p.parser.scope[p[1]].children[0], p[1], p[2], p.parser.scope[p[1]].get_elem_type()])
         else:
-            p[0] = RoseTree('valList', [p.parser.scope[p[1]].children[0], p[1], p[2], p.parser.scope[p[1]].children[2]])
+            p[0] = RoseTree('valList', [p.parser.scope[p[1]].children[0], p[1], p[2], p.parser.scope[p[1]].get_elem_type()])
 
 def p_listIndex(p):
     """listIndex : LBRA evaluation RBRA
@@ -530,13 +531,13 @@ parser.functions = {}
 
 if __name__ == '__main__':
     
-    examples = ['sum', 'array', 'control_flow', 'function_call', 'iostream']
+    examples = ['sum', 'array', 'control_flow', 'function_call', 'iostream', 'fibonacciMemo']
     
-    for example in examples:
+    for example in [examples[5]]:
 
         data = open('../examples/' + example + '.jacll').read()
 
-        out = parser.parse(data, lexer= lexer, debug= False)
+        out = parser.parse(data, lexer= lexer, debug= True)
 
         parser.scope = {}
         parser.functions = {}

@@ -1,0 +1,79 @@
+start
+pusha main
+call
+stop
+
+fibonacci:
+pushi 0
+pushl -1
+pushl -2
+loadn
+pushi 0
+sup
+jz 0L
+pushfp
+pushi 0
+pushl -1
+pushl -2
+loadn
+storen
+jump 1L
+0L:
+pushfp
+pushi 0
+pushl -2
+pushi 1
+sub
+pushl -1
+pusha fibonacci
+call
+pop 1
+pushl -2
+pushi 2
+sub
+pushl -1
+pusha fibonacci
+call
+pop 1
+add
+storen
+1L:
+storel -2
+return
+
+
+main:
+pushi 0
+pushn 100
+pushfp
+pushi 1
+pushi 1
+add
+pushi 1
+storen
+pushfp
+pushi 2
+pushi 1
+add
+pushi 1
+storen
+pushfp
+pushi 0
+read
+atoi
+storen
+pushl 0
+pushfp
+pushi 0
+pushi 1
+add
+padd
+pusha fibonacci
+call
+pop 1
+writei
+writeln
+pop 1
+return
+
+

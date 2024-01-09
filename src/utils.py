@@ -225,7 +225,10 @@ class RoseTree:
                 return self.children[-1]
             else:
                 if type(self.children[2]) == list:
-                    return self.children[2][0].get_elem_type()
+                    if len(self.children[2]) != self.children[3]:
+                        return DataType.INT
+                    else:
+                        return self.children[2][0].get_elem_type()
                 else:
                     return self.children[2]
         return self.children[0]

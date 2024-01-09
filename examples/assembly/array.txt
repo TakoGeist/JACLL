@@ -1,0 +1,79 @@
+start
+pusha main
+call
+stop
+
+main:
+pushi 1
+pushi 2
+pushi 3
+pushi 4
+pushi 5
+pushi 1
+pushi 2
+pushi 3
+pushi 4
+pushi 5
+pushi 1
+pushi 2
+pushi 3
+pushi 4
+pushi 5
+pushi 1
+pushi 0
+0L:
+pushl 16
+pushi 1
+infeq
+jz 1L
+pushi 0
+2L:
+pushl 17
+pushi 4
+infeq
+jz 3L
+pushfp
+pushi 15
+pushl 15
+pushfp
+pushi 5
+pushl 16
+mul
+pushl 17
+add
+pushi 0
+add
+loadn
+pushfp
+pushl 17
+pushi 10
+add
+loadn
+add
+mul
+storen
+pushfp
+pushi 17
+pushl 17
+pushi 1
+add
+storen
+jump 2L
+3L:
+pop 1
+pushfp
+pushi 16
+pushl 16
+pushi 1
+add
+storen
+jump 0L
+1L:
+pop 1
+pushl 15
+writei
+writeln
+pop 2
+return
+
+

@@ -1,0 +1,59 @@
+start
+pusha main
+call
+stop
+
+main:
+pushi 3
+pushl 0
+pushi 10
+add
+pushl 0
+pushi 0
+supeq
+jz 0L
+pushs "Is positive"
+writes
+writeln
+0L:
+pushl 1
+pushi 0
+supeq
+jz 1L
+pushs "Is positive"
+writes
+writeln
+jump 2L
+1L:
+pushs "Is negative"
+writes
+writeln
+2L:
+pushi 0
+3L:
+pushl 2
+pushl 1
+inf
+jz 4L
+pushfp
+pushi 0
+pushl 0
+pushl 1
+add
+storen
+pushfp
+pushi 2
+pushl 2
+pushi 1
+add
+storen
+jump 3L
+4L:
+pop 1
+pushl 0
+writei
+writeln
+pop 1
+return
+
+

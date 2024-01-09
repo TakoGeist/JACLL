@@ -1,0 +1,74 @@
+start
+pusha main
+call
+stop
+
+innerprod:
+pushi 0
+pushi 0
+0L:
+pushl 1
+pushi 5
+inf
+jz 1L
+pushfp
+pushi 0
+pushl 0
+pushl -3
+pushl 1
+loadn
+pushl -2
+pushl 1
+loadn
+mul
+add
+storen
+pushfp
+pushi 1
+pushl 1
+pushi 1
+add
+storen
+jump 0L
+1L:
+pop 1
+storel -3
+return
+
+
+main:
+pushi 1
+pushi 2
+pushi 3
+pushi 4
+pushi 5
+pushi 6
+pushi 7
+pushi 8
+pushi 9
+pushi 10
+pushi 0
+pushfp
+pushi 10
+pushfp
+pushi 0
+pushi 0
+add
+padd
+pushfp
+pushi 0
+pushi 5
+add
+padd
+pushi 5
+pusha innerprod
+call
+pop 2
+storen
+pushl 10
+writei
+writeln
+pop 2
+return
+
+

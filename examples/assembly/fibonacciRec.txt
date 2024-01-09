@@ -1,0 +1,57 @@
+start
+pusha main
+call
+stop
+
+fibonacci:
+pushi 0
+pushl -1
+pushi 1
+equal
+jz 0L
+pushfp
+pushi 0
+pushi 1
+storen
+jump 1L
+0L:
+pushl -1
+pushi 0
+equal
+not
+jz 2L
+pushfp
+pushi 0
+pushl -1
+pushi 1
+sub
+pusha fibonacci
+call
+pushl -1
+pushi 2
+sub
+pusha fibonacci
+call
+add
+storen
+2L:
+1L:
+storel -1
+return
+
+
+main:
+pushi 0
+pushfp
+pushi 0
+read
+atoi
+storen
+pushl 0
+pusha fibonacci
+call
+writei
+writeln
+return
+
+

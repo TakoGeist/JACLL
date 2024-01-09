@@ -8,6 +8,16 @@ if __name__ == '__main__':
         print("No arguments foound.")
         quit()
 
-    stream = open(getcwd() + "\\" + argv[1] + ".jacll", 'r').read()
+    if argv[1].endswith('.jacll'):
+        stream = open(getcwd() + "\\" + argv[1], 'r').read()
+    else:
+        raise TypeError("Invalid file type. Expected '.jacll' file.")
 
-    print(compile(stream))
+    assembly = compile(stream)
+
+    if len(argv) < 3:
+        print(assembly)
+    else:
+        file_out = open(getcwd() + "\\" + argv[2] + ".txt", 'w')
+        file_out.write(assembly)
+        file_out.close()

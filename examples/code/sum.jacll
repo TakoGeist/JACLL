@@ -18,7 +18,7 @@ func main(){
     print(z);
 
     let a: float = 2.;
-    let b: float = .5;
+    let b: float = 1.0;
     let c: float = 0.0;
 
     c = a + b;
