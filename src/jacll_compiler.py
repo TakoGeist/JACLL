@@ -98,9 +98,11 @@ def funcs(tree):
             out += 'storel ' + str(symbol_table[argus[0].name()][1]) + '\n'
 
         if bod:
-            out += 'pop ' + str(len(symbol_table.table) - len(argus)) + '\n'
+            if len(symbol_table.table) - len(argus) > 0:
+                out += 'pop ' + str(len(symbol_table.table) - len(argus)) + '\n'
         else:
-            out += 'pop ' + str(len(symbol_table.table) - len(argus) - 1) + '\n'
+            if len(symbol_table.table) - len(argus) > 1:
+                out += 'pop ' + str(len(symbol_table.table) - len(argus) - 1) + '\n'
             
         out += re
         out += '\n\n'
@@ -252,17 +254,17 @@ def parse_if(tree, symbol_table):
         out += label1 + ':\n'
     return out
 
-def parse_print(line, symbol_table):
+def parse_print(tree, symbol_table):
     out = ''
-    if line.children[0].type == 'val':
+    if tree.children[0].type == 'val':
 
-        if line.children[0].get_type() == DataType.STR:
-            out += 'pushs ' + line.children[0].children[1] + '\n'
+        if tree.children[0].get_type() == DataType.STR:
+            out += 'pushs ' + tree.children[0].children[1] + '\n'
             out += 'writes\n'
             out += 'writeln\n'
             
         else:
-            [val, type] = get_val(line.children[0], symbol_table, True)
+            [val, type] = get_val(tree.children[0], symbol_table, True)
             out += val
 
             match type:
@@ -275,10 +277,10 @@ def parse_print(line, symbol_table):
             out += 'write' + type + '\n'
             out += 'writeln\n'
 
-    elif line.children[0].type == 'valList':
-        val = get_val(line.children[0], symbol_table)
+    elif tree.children[0].type == 'valList':
+        val = get_val(tree.children[0], symbol_table)
         out += val
-        match line.children[0].get_elem_type():
+        match tree.children[0].get_elem_type():
             case DataType.STR:
                 type = 's'
             case DataType.FLOAT:
@@ -288,8 +290,8 @@ def parse_print(line, symbol_table):
         out += 'write' + type + '\n'
         out += 'writeln\n'
     else:
-        out += line(line.children[0], symbol_table)
-        match line.children[0].get_type():
+        out += line(tree.children[0], symbol_table)
+        match tree.children[0].get_type():
             case DataType.FLOAT:
                 type = 'f'
             case DataType.STR:
@@ -325,13 +327,15 @@ def parse_read(tree, symbol_table):
 def call(tree, symbol_table):
     out = ''
     for arg in tree.args():
-        if arg.get_type() == DataType.LIST:
+        if arg.type == 'BinOp':
+            out += bin_op(arg, symbol_table)
+        elif arg.get_type() == DataType.LIST:
             out += get_address(arg, symbol_table, _single= True)
         else:
             out += get_val(arg, symbol_table)
     out += 'pusha ' + tree.name() + '\n'
     out += 'call\n'
-    if len(tree.args()) != 0:
+    if len(tree.args()) > 1:
         out += 'pop ' + str(len(tree.args()) - 1) + '\n'
     return out
 

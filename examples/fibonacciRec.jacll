@@ -1,0 +1,25 @@
+
+func fibonacci(x: int) => int{
+    
+    let res: int = 0;
+
+    if x == 1{
+        res = 1;
+    }
+    if x != 1 && x != 0{
+       res = fibonacci(x - 1) + fibonacci(x - 2);
+    }
+
+    return res;
+}
+
+func main(){
+
+    let num;
+
+    read(num);
+
+    print(fibonacci(num));
+
+    return;
+}
