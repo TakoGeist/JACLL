@@ -5,7 +5,7 @@
     In that case nothing is written.
 */
 
-func inner_prod(l1 : [int], l2: [int], N:int) => int {
+func innerprod(l1 : [int], l2: [int], N:int) => int {
     
     let result:int = 0;
 
@@ -21,7 +21,7 @@ func main() {
     let l1:[int,5] = [1,2,3,4,5];
     let l2:[int,5] = [6,7,8,9,10];
 
-    let result = inner_prod(l1,l2,5);
+    let result = innerprod(l1,l2,5);
     
     print(result);
 

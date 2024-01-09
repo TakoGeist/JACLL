@@ -25,7 +25,7 @@ def get_val(tree, symbol_table, _type= False):
             else: 
                 out += line(tree.index(), symbol_table)
         
-            out += 'pushl ' + str(symbol_table[tree.name()][1]) + '\n'
+            out += 'pushi ' + str(symbol_table[tree.name()][1]) + '\n'
             out += 'add\n'
         
         else:
@@ -240,9 +240,9 @@ def parse_print(line, symbol_table):
             out += 'writeln\n'
 
     elif line.children[0].type == 'valList':
-        [val, type] = get_val(line.children[0], symbol_table, True)
+        val = get_address(line.children[0], symbol_table)
         out += val
-        match type:
+        match line.children[0].get_elem_type():
             case DataType.STR:
                 type = 's'
             case DataType.FLOAT:
