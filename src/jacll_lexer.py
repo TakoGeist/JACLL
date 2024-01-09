@@ -12,6 +12,7 @@ reserved = {
     'str' : 'STR',
     'return' : 'RETURN',
     'print' : 'PRINT',
+    'read' : 'READ',
 }
 
 tokens = ['STRING', 'COMMENT', 'ENDLINE', 'EQUAL', 'VARNAME', 'LPAR', 'RPAR', 
@@ -36,8 +37,6 @@ t_GREATERE = r'\>\='
 t_GREATER = r'\>'
 t_LOWERE = r'\<\='
 t_LOWER = r'\<'
-# t_ALGCODE = r'(\+|(\-)|\*\*|\*|\/|\%)'
-# t_LOGCODE = r'((\=\=)|\!|\~|\&\&|\&|\^|(\|\|)|(\|)|(\<\=)|(\>\=)|(\<)|\>)'
 t_EQUAL = r'\='
 t_ENDLINE = r'\;'
 t_DDOT = r'\:'
@@ -147,8 +146,7 @@ if __name__ == '__main__':
         if (tok.value in [';','{','}']):
             out += '\n'
 
-    print(out)
 
-    # file_out = open("../testing/" + example + "_parse_out.txt", "w")
+    file_out = open("../testing/" + example + "_lexer_out.txt", "w")
 
-    # file_out.write(out)
+    file_out.write(out)
