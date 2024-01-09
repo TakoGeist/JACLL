@@ -240,7 +240,7 @@ def parse_print(line, symbol_table):
             out += 'writeln\n'
 
     elif line.children[0].type == 'valList':
-        val = get_address(line.children[0], symbol_table)
+        val = get_val(line.children[0], symbol_table)
         out += val
         match line.children[0].get_elem_type():
             case DataType.STR:
