@@ -304,8 +304,3 @@ def code_generation(inter):
     out += funcs(prog)
         
     return out
-
-
-stream= open('../examples/' + 'control_flow' + '.jacll').read()
-
-compile(stream)
