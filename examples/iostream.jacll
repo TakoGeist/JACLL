@@ -5,9 +5,10 @@ func main(){
 
     read(x[2]);
     
-    y = y + 2;
+    y = x[2] + 2;
 
-    print(x[1]);
+    print(x[2]);
+    print(y);
 
     return;
 }
