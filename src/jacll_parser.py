@@ -26,8 +26,8 @@ def p_listFuncs(p):
     """listFuncs : funcHeader funcBody listFuncs
                  | funcHeader funcBody"""
 
-    if p[1].children[0] != None and p[2][-1].children[0] != p[1].children[0]:
-        raise SyntaxError(f"Invalid return type found for function {p[1].children[1]}. Expected type {p[1].children[0]} but found {p[2][-1].children[0]} instead.")
+    if p[1].children[0] != None and p[2][-1].children[0].get_type() != p[1].children[0]:
+        raise SyntaxError(f"Invalid return type found for function {p[1].children[1]}. Expected type {p[1].children[0]} but found {p[2][-1].children[0].get_type()} instead.")
     
     p[1].add_child(p[2])
     if len(p) > 3:
@@ -116,9 +116,9 @@ def p_retval(p):
                | ENDLINE
     """
     if len(p) == 2:
-        p[0] = []
+        p[0] = [RoseTree('ret', [])]
     else:   
-        p[0] = [p[1]]
+        p[0] = [RoseTree('ret', [p[1]])]
 
 def p_line(p):
     """ line : declaration

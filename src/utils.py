@@ -16,6 +16,14 @@ class SymbolTable():
         else:
             self.stack += 1
     
+    def remove(self, other):
+        self.table.pop(other.name())
+        
+        if other.type == 'init':
+            self.stack -= other.get_size()
+        else:
+            self.stack -= 1
+
     def offset(self, num):
         self.stack -= num
 
