@@ -1,0 +1,29 @@
+
+func calc(l1 :[int], l2: [int], i:int) => int {
+    let x;
+    read(x);
+    return x + l1[i] * l2[i];
+}
+
+func innerprod(l1 : [int], l2: [int], N:int) => int {
+    
+    let result:int = 0;
+
+    for i:int = 0; i<N; i = i+1 {
+        result = result + calc(l1,l2,i);
+    }
+
+    return result;
+}
+
+func main() {
+
+    let l1:[int,5] = [1,2,3,4,5];
+    let l2:[int,5] = [6,7,8,9,10];
+
+    let result = innerprod(l1,l2,5);
+    
+    print(result);
+
+    return;
+}
