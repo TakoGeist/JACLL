@@ -6,6 +6,11 @@ Constructed with the use of PLY python module.
 
 The language is processed by a tokenizer made with PLY's lex module, the parsing is done with the use of PLY's yacc module which gives the programs AST. Finally the AST is processed and transformed in [EWVM Virtual Machine](https://ewvm.epl.di.uminho.pt/) assembly.
 
+## Utilization
+To compile a file simply run *'jacll.py'* script with a file to compile and a file to output, alternatively it can be used without an output file to write to *stdout* or without any to use redirected input and output (read from *stdin* and write to *stdout*). Any path provided should be relative to current work directory.
+
+ie. >$ py jacll.py < input_file.jacll > output_file.txt
+
 ## Grammar Rules - BNF
 ```
 NT = { BOOL, LEQUAL, VARNAME, INTEGER, FOR, DIV, GREATER, READ, IF, GREATERE,
