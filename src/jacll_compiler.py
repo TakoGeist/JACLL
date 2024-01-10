@@ -21,7 +21,7 @@ class Jacll():
         return self.code_generation(inter)
 
     def get_val(self, tree, _type= False):
-        """Returns variable's value based on it's declaration.
+        """Returns instructions to get variable's value based on it's declaration.
 
         Args:
             tree (RoseTree): Node where the value is stored
@@ -29,7 +29,7 @@ class Jacll():
             the value should be returned with it as a list [val, type]. Defaults to False.
 
         Returns:
-            Any | [Any, DataType]: Variable's value / value and type
+            str | [str, DataType]: Instructions to get variable's value / value and type
         """
         if type(tree.name()) != str:
             out = 'push' + DataType.inferetype(tree.name()).terminator() + ' ' + str(tree.name()) + '\n'
@@ -66,6 +66,14 @@ class Jacll():
         return out
 
     def get_address(self, tree, _single= False):
+        """Returns variable's stack address based on the programs symbol_table.
+
+        Args:
+            tree (RoseTree): Node where the variable's name is stored
+
+        Returns:
+            str : Variable's stack address
+        """
         if type(tree) == str:
             return 'pushfp\npush' + self.symbol_table[tree][0].terminator() + ' ' + str(self.symbol_table[tree][1]) + '\n'
         if tree.type == 'val':
@@ -88,6 +96,14 @@ class Jacll():
         return out
 
     def bin_op(self, tree):
+        """Decodes 'BinOp' nodes 
+
+        Args:
+            tree (RoseTree): Node where the 'BinOP' is declared
+
+        Returns:
+            str: Instructions of a decoded 'BinOp'
+        """
         if tree.type == 'val':
             return self.get_val(tree)
         
@@ -108,6 +124,16 @@ class Jacll():
 
 
     def funcs(self, tree):
+        """Decodes the program's structure by function headers and function bodies
+        so that the assembly correctly manages the stack
+
+        Args:
+            tree ([RoseTree]): List of RoseTree objects where the functions are stored
+
+        Returns:
+            str: Decoded functions(final program without the initialization gives incorrect 
+            behaviour on the virtual machine for programs with more functions than main)
+        """
         out = ''
         
         for func in tree:        
@@ -134,12 +160,30 @@ class Jacll():
         return out
 
     def args(self, tree):
+        """Decodes functions arguments in order for the stack to be properly managed.
+        Functions arguments sit bellow said function frame pointer in order of the declaration.
+        !This functions only manages the internal symbol table. It doesn't produce assembly code!
+
+        Args:
+            tree ([RoseTree]): List of RoseTree objects where the function's arguments are stored
+
+        Returns:
+            str: Empty string
+        """
         self.symbol_table.offset(len(tree))
         for var in tree:
             self.symbol_table.add(var)
         return ''
 
     def line(self, tree):
+        """Node type decoder
+
+        Args:
+            tree (RoseTree): Node
+
+        Returns:
+            Any: Correct funtion call based on Node type
+        """
         match tree.type:
             case 'init':
                 return self.init(tree)
@@ -165,6 +209,14 @@ class Jacll():
                 return self.ret(tree)
 
     def ret(self, tree):
+        """Decodes 'return' instruction
+
+        Args:
+            tree (RoseTree):  RoseTree object where the return is stored
+
+        Returns:
+            [str, str]: First string constitutes adjustments needed for non-empty 'return'. Second string is just 'return'.
+        """
         out = ''
         if len(tree.children) != 0:
             if tree.children[0].type != 'val':
@@ -175,6 +227,14 @@ class Jacll():
 
 
     def body(self, tree):
+        """Decodes function body
+
+        Args:
+            tree ([RoseTree]):  List of RoseTree objects which store every line of code inside function
+
+        Returns:
+            str: Function Body in assembly
+        """
         out = ''
         for elem in tree:
             out += self.line(elem)
@@ -182,6 +242,14 @@ class Jacll():
 
             
     def init(self, tree):
+        """Variable initialization. In charge of adding to the internal symbol table and to the Virtual Machine stack
+
+        Args:
+            tree (RoseTree):  RoseTree object where the initialization is stored
+
+        Returns:
+            str: Stack push in assembly
+        """
         self.symbol_table.add(tree)
 
         if type(tree.children[2]) == RoseTree and tree.children[2].type == 'neg':
@@ -217,6 +285,14 @@ class Jacll():
 
 
     def atrib(self, tree):
+        """Decodes attributions. In charge of evaluating and storing an attribution.
+
+        Args:
+            tree (RoseTree):  RoseTree object where the attribution is stored
+
+        Returns:
+            str: Assembly code for fetching, evaluation and storing (3 steps for attribution)
+        """
 
         if tree.children[2].type == 'call':
             out = self.call(tree.children[2])
@@ -228,6 +304,14 @@ class Jacll():
         return address + out + 'storen\n'
         
     def parse_for(self, tree):
+        """Decodes 'for' Loops
+
+        Args:
+            tree (RoseTree):  RoseTree object where the for-loop is stored
+
+        Returns:
+            str: for-loop assembly code
+        """
         out = ''
         label1 = str(self.label_counter) + 'L'
         self.label_counter += 1
@@ -259,6 +343,14 @@ class Jacll():
         return out
 
     def parse_if(self, tree):
+        """Decodes 'for' Loops
+
+        Args:
+            tree (RoseTree):  RoseTree object where the for-loop is stored
+
+        Returns:
+            str: for-loop assembly code
+        """
         out = ''
 
         if len(tree.children) == 3:
@@ -283,6 +375,14 @@ class Jacll():
         return out
 
     def parse_print(self, tree):
+        """Decodes 'print' functions. Manages stdout requests.
+
+        Args:
+            tree (RoseTree): RoseTree object where 'print' calls are stored
+
+        Returns:
+            str: Data fetch and print call in assembly
+        """
         out = ''
         if tree.children[0].type == 'val':
 
@@ -332,6 +432,14 @@ class Jacll():
         return out
         
     def parse_read(self, tree):
+        """Decodes 'read' functions. Manages stdin requests.
+
+        Args:
+            tree (RoseTree): RoseTree object where 'read' calls are stored
+
+        Returns:
+            str: read call and data storage in assembly
+        """
         out = ''
 
         match tree.children[0].get_elem_type():
@@ -353,6 +461,14 @@ class Jacll():
         return out
 
     def call(self, tree):
+        """Decodes non internal 'function' calls.
+
+        Args:
+            tree (RoseTree): RoseTree object where calls are stored with arguments
+
+        Returns:
+            str: Assembly stack management to guarantee correct argument passing between functions
+        """
         out = ''
         for arg in tree.args():
             if arg.type == 'BinOp':
@@ -368,6 +484,14 @@ class Jacll():
         return out
 
     def code_generation(self, inter):
+        """Creates initial code section to ensure main as first function executed
+
+        Args:
+            inter (RoseTree): RoseTree object containing whole program (Initial Node)
+
+        Returns:
+            str: Whole program in assembly
+        """
         out = 'start\npusha main\ncall\nstop\n\n'
         
         prog = inter.children

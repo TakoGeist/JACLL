@@ -5,7 +5,11 @@ stop
 
 isprime:
 pushi 1
-pushl 0
+pushl -1
+pushi 2
+div
+ftoi
+pushl -1
 pushi 2
 mod
 pushi 0
@@ -18,11 +22,8 @@ storen
 0L:
 pushi 3
 1L:
+pushl 2
 pushl 1
-pushl -1
-pushi 2
-div
-ftoi
 inf
 pushl 0
 pushi 1
@@ -30,7 +31,7 @@ equal
 and
 jz 2L
 pushl -1
-pushl 1
+pushl 2
 mod
 pushi 0
 equal
@@ -41,8 +42,8 @@ pushi 0
 storen
 3L:
 pushfp
-pushi 1
-pushl 1
+pushi 2
+pushl 2
 pushi 2
 add
 storen
@@ -63,6 +64,7 @@ writes
 writeln
 5L:
 storel -1
+pop 1
 return
 
 
@@ -74,7 +76,7 @@ read
 atoi
 storen
 pushl 0
-pushi 0
+pushi 2
 supeq
 jz 6L
 pushl 0
@@ -82,9 +84,19 @@ pusha isprime
 call
 jump 7L
 6L:
+pushl 0
+pushi 0
+sup
+jz 8L
+pushs "Is prime"
+writes
+writeln
+jump 9L
+8L:
 pushs "Invalid number"
 writes
 writeln
+9L:
 7L:
 return
 

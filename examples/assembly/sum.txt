@@ -24,7 +24,7 @@ pushf 0.0
 pushfp
 pushi 5
 pushl 3
-pushl 4
+pushl 5
 fadd
 storen
 pushl 5

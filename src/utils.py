@@ -1,5 +1,10 @@
 from enum import IntEnum
     
+class SyntaxError(Exception):
+    def __init__(self, line, message) -> None:
+        self.message = f"Parser found an error at line {line}.\n{message}"
+        super().__init__(self.message)
+
 class SymbolTable():
     def __init__(self):
         self.table = {}

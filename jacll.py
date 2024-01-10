@@ -1,12 +1,22 @@
 
 if __name__ == '__main__':
+    import sys, traceback
     from sys import path, argv
     path.append('src')
+
+    def hook(type, value, tb):
+        smalltrace = traceback.format_tb(tb, limit=1)
+        smalltrace = smalltrace[0].split("\n")[0]
+        exc = traceback.format_exception_only(type, value)[0]
+        print(smalltrace + "\n" + exc)
+
+    sys.excepthook = hook
+
     from os import getcwd
     from jacll_compiler import Jacll
 
     if len(argv) < 2:
-        print("No arguments foound.")
+        print("No arguments found.")
         quit()
 
     if argv[1].endswith('.jacll'):

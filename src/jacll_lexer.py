@@ -37,9 +37,21 @@ t_GREATER = r'\>'
 t_LOWERE = r'\<\='
 t_LOWER = r'\<'
 t_EQUAL = r'\='
-t_ENDLINE = r'\;'
 t_DDOT = r'\:'
 t_COMMA = r'\,'
+
+def t_ENDLINE(t):
+    r';'
+    if (len(lexer.stack) != 0):
+        if (t.lexer.stack[-1].value != '{'):
+            out = ''
+            match t.lexer.stack[-1].value:
+                case '(':
+                    out = ')'
+                case '[':
+                    out = ']'
+            raise SyntaxError(f'Expected \'{out}\' before end of line at line {t.lineno}.')
+    return t
 
 def t_BOOLEAN(t):
     r'true|false'
@@ -69,9 +81,9 @@ def t_RPAR(t):
     if (len(lexer.stack) != 0):
         token = lexer.stack.pop(-1)
         if (token.value != '('):
-            raise SyntaxError(f'Found \')\' at line {t.lineno} but was never open')
+            raise SyntaxError(f'Found \')\' at line {t.lineno} but was never open.')
     else:
-        raise SyntaxError(f'Found \')\' at line {t.lineno} but was never open')
+        raise SyntaxError(f'Found \')\' at line {t.lineno} but was never open.')
     return t
 
 def t_RBRA(t):
@@ -79,9 +91,9 @@ def t_RBRA(t):
     if (len(lexer.stack) != 0):
         token = lexer.stack.pop(-1)
         if (token.value != '['):
-            raise SyntaxError(f'Found \']\' at line {t.lineno} but was never open')
+            raise SyntaxError(f'Found \']\' at line {t.lineno} but was never open.')
     else:
-        raise SyntaxError(f'Found \']\' at line {t.lineno} but was never open')
+        raise SyntaxError(f'Found \']\' at line {t.lineno} but was never open.')
     return t
 
 def t_RCURLY(t):
@@ -89,9 +101,9 @@ def t_RCURLY(t):
     if (len(lexer.stack) != 0):
         token = lexer.stack.pop(-1)
         if (token.value != '{'):
-            raise SyntaxError(f'Found \'}}\' at line {t.lineno} but was never open')
+            raise SyntaxError(f'Found \'}}\' at line {t.lineno} but was never open.')
     else:
-        raise SyntaxError(f'Found \'}}\' at line {t.lineno} but was never open')
+        raise SyntaxError(f'Found \'}}\' at line {t.lineno} but was never open.')
     return t
 
 def t_FLOATING(t):
