@@ -17,14 +17,13 @@ reserved = {
 
 tokens = ['STRING', 'COMMENT', 'ENDLINE', 'EQUAL', 'VARNAME', 'LPAR', 'RPAR', 
           'LBRA', 'RBRA', 'LCURLY', 'RCURLY', 'DDOT', 'COMMA', 'INTEGER','FLOATING', 
-          'BOOLEAN', 'PLUS', 'MINUS', 'MULT', 'DIV', 'POW', 'AND', 'OR', 'LEQUAL',
+          'BOOLEAN', 'PLUS', 'MINUS', 'MULT', 'DIV', 'AND', 'OR', 'LEQUAL',
           'NEQUAL', 'NOT', 'GREATER', 'GREATERE', 'LOWER', 'LOWERE', 'MOD'
           ] + list(reserved.values())
 
 t_STRING = r'\"([^"\\]|\\.)*\"' 
 t_PLUS = r'\+'
 t_MINUS = r'\-'
-t_POW = r'\*\*'
 t_MULT = r'\*'
 t_MOD = r'\%'
 t_DIV = r'\/'

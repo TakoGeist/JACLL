@@ -36,7 +36,7 @@ pushfp
 pushi 15
 pushl 15
 pushfp
-pushi 5
+pushi 0
 pushl 16
 mul
 pushl 17

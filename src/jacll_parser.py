@@ -13,7 +13,6 @@ precedence = (
               ('left', 'PLUS', 'MINUS'),
               ('left', 'MULT', 'DIV', 'MOD'),
               ('right', 'UMINUS'),
-              ('right', 'POW'),
               ('left', 'LPAR', 'RPAR'),
               )
 
@@ -160,15 +159,22 @@ def p_read(p):
     p[0] = RoseTree('read', [p[3]])    
 
 def p_ifClause(p):
-    """ifClause : IF evaluation LCURLY code RCURLY ELSE LCURLY code RCURLY
-                | IF evaluation LCURLY code RCURLY"""
+    """ifClause : IF evaluation LCURLY code RCURLY elseClause"""
     if p[2].children[0] != DataType.BOOL:
         raise SyntaxError("Invalid expression found. Does not evaluate to 'bool'.")
     
-    if len(p) > 6:
-        p[0] = RoseTree('if', [p[2], p[4], p[8]])
+    if p[6] != None:
+        p[0] = RoseTree('if', [p[2], p[4], p[6]])
     else:
         p[0] = RoseTree('if', [p[2], p[4]])
+
+def p_elseClause(p):
+    """elseClause : ELSE LCURLY code RCURLY
+                  | """
+    if len(p) == 5:
+        p[0] = p[3]
+    else:
+        p[0] = None
 
 def p_forLoop(p):
     """forLoop : FOR forControl LCURLY code RCURLY"""
@@ -211,15 +217,15 @@ def p_call(p):
 
     if func := p.parser.functions.get(p[1]):
         if len(func.children[2]) != len(p[3]):
-            raise SyntaxError(f"""Mismatched number of arguments provided at function call. Expected {len(func.children[2])} but got {len(p[3])}.""")
+            raise SyntaxError(f"Mismatched number of arguments provided at function call. Expected {len(func.children[2])} but got {len(p[3])}.")
         for idx in range(len(func.children[2])):
             if func.children[2][idx].children[0] != p[3][idx].children[0]:
-                raise SyntaxError(f"""Mismatched type for argument {func.children[2][idx].children[1]} of function {func.children[1]}.
-Expected {func.children[2][idx].children[0]} but got {p[3][idx].children[0]} instead.""")
+                raise SyntaxError(f'''Mismatched type for argument {func.children[2][idx].children[1]} of function {func.children[1]}.
+Expected {func.children[2][idx].children[0]} but got {p[3][idx].children[0]} instead.''')
         p[0] = RoseTree('call', [func.children[0], func.children[1], p[3]])
     else:
-        raise SyntaxError(f"""Function call made with an undefined function.
-If the function is present consider moving it's declaration to before the current function.""")
+        raise SyntaxError(f'''Function call made with an undefined function.
+If the function is present consider moving it's declaration to before the current function.''')
 
 def p_funcArgs(p):
     """funcArgs : evaluation listfuncArgs
@@ -287,7 +293,6 @@ def p_evaluation(p):
                   | evaluation MINUS evaluation
                   | evaluation MULT evaluation
                   | evaluation DIV evaluation
-                  | evaluation POW evaluation
                   | evaluation MOD evaluation
                   | evaluation AND evaluation
                   | evaluation OR evaluation
@@ -462,23 +467,20 @@ def p_type_list(p):
     p[0] = p[1]
 
 def p_flist(p):
-    """flist : LBRA LBRA type RBRA RBRA
-             | LBRA type RBRA
+    """flist : LBRA type RBRA
     """
-    if len(p) > 4:
-        p[0] = ["list", p[3]] 
-    else:
+    if type(p[2]) != list:
         p[0] = ["list", p[2]] 
-
-def p_list_rec(p):
-    """list : LBRA LBRA type COMMA INTEGER RBRA COMMA INTEGER RBRA
-    """
-    p[0] = [DataType.LIST,[p[3], p[5] * p[8], p[5]]]
+    else:
+        p[0] = p[2] 
 
 def p_list(p):
     """list : LBRA type COMMA INTEGER RBRA
     """
-    p[0] = [DataType.LIST,[p[2], p[4]]]
+    if type(p[2]) != list:
+        p[0] = [DataType.LIST,[p[2], p[4]]]
+    else:
+        p[0] = [DataType.LIST,[p[2][1][0], p[4] * p[2][1][1]]]
 
 def p_accessList(p):
     """accessList : VARNAME listIndex listIndex
