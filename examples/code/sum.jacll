@@ -1,0 +1,29 @@
+
+/*
+    Declarations are led by the 'let' keyword and followed by an optional 
+    type declaration and a equal sign '=' such that the following are equivalent
+        let x: int; // Declares a variable x with type int default value (0)
+        let x: int = 0; // Declares a variable x with type int and value 0
+        let x = 0; // Declares a variable x with implicit type int and value 0
+*/
+
+func main(){
+
+    let x: int = 2;
+    let y: int = -3;
+    let z: int = 0;
+
+    z = x + y;
+
+    print(z);
+
+    let a: float = 2.;
+    let b: float = 1.0;
+    let c: float = 0.0;
+
+    c = a + b;
+
+    print(c);
+
+    return;
+}

@@ -1,0 +1,356 @@
+from ast import List
+from jacll_parser import parser
+from utils import *
+
+label_counter = 0;
+
+def compile(stream):
+    inter = parser.parse(stream)
+
+    return code_generation(inter)
+
+def get_val(tree, symbol_table, _type= False):
+    if type(tree.name()) != str:
+        out = 'push' + DataType.inferetype(tree.name()).terminator() + ' ' + str(tree.name()) + '\n'
+        ty = DataType.inferetype(tree.name())
+    elif tree.type == 'val':
+        out = 'pushl ' + str(symbol_table[tree.name()][1]) + '\n'
+        ty = symbol_table[tree.name()][0]
+    else:
+        if symbol_table[tree.name()][1] >= 0:
+            out = 'pushfp\n'
+        
+            if type(tree.index()) == int:
+                out += 'pushi ' + str(tree.index()) + '\n'
+            else: 
+                out += line(tree.index(), symbol_table)
+        
+            out += 'pushi ' + str(symbol_table[tree.name()][1]) + '\n'
+            out += 'add\n'
+        
+        else:
+            out = 'pushl ' + str(symbol_table[tree.name()][1]) + '\n'
+
+            if type(tree.index()) == int:
+                out += 'pushi ' + str(tree.index()) + '\n'
+            else: 
+                out += line(tree.index(), symbol_table)
+        
+            
+        out += 'loadn\n'
+        ty = symbol_table[tree.name()][2]
+
+    if _type:
+        return [out, ty]
+    return out
+
+def get_address(tree, symbol_table, _single= False):
+    if type(tree) == str:
+        return 'pushfp\npush' + symbol_table[tree][0].terminator() + ' ' + str(symbol_table[tree][1]) + '\n'
+    if tree.type == 'val':
+        out = 'pushfp\npushi ' + str(symbol_table[tree.name()][1]) + '\n'
+    elif tree.type == 'var':
+        out = 'pushfp\npushi ' + str(symbol_table[tree.name()][1]) + '\n'
+    else:
+        if symbol_table[tree.name()][1] >= 0:
+            out = 'pushfp\n'
+            if type(tree.index()) == int:
+                out += 'pushi ' + str(tree.index()) + '\n'
+            else: 
+                out += line(tree.index(), symbol_table)
+            out += 'pushi ' + str(symbol_table[tree.name()][1]) + '\n'
+            out += 'add\n'
+            if _single:
+                out += 'padd\n'
+        else:
+            out = 'pushl ' + str(symbol_table[tree.name()][1]) + '\n'
+    return out
+
+def bin_op(tree, symbol_table):
+    if tree.type == 'val':
+        return get_val(tree, symbol_table)
+    
+    if tree.type == 'valList':
+        return get_val(tree, symbol_table)
+    
+    if tree.type == 'call':
+        return line(tree,symbol_table)
+
+    if tree.type == 'neg':
+        op = tree.op()
+        return op[0] + bin_op(tree.children[1], symbol_table) + op[1]
+
+    if tree.type == 'not':
+        return bin_op(tree.children[1], symbol_table) + tree.op()
+    
+    return bin_op(tree.left(), symbol_table) + bin_op(tree.right(), symbol_table) + tree.op()
+
+
+def funcs(tree):
+    out = ''
+    symbol_table = SymbolTable()
+    for func in tree:        
+        argus = func.args()
+        code = func.code()
+        out += func.name() + ':\n' + args(argus, symbol_table) + body(code[:len(code) - 1], symbol_table)
+        [bod, re] = ret(code[-1], symbol_table)
+        if bod:
+            out += bod
+
+        if len(argus) != 0:
+            out += 'storel ' + str(symbol_table[argus[0].name()][1]) + '\n'
+
+        if bod:
+            if len(symbol_table.table) - len(argus) > 0:
+                out += 'pop ' + str(len(symbol_table.table) - len(argus)) + '\n'
+        else:
+            if len(symbol_table.table) - len(argus) > 1:
+                out += 'pop ' + str(len(symbol_table.table) - len(argus) - 1) + '\n'
+            
+        out += re
+        out += '\n\n'
+        symbol_table.empty()
+    return out
+
+def args(tree, symbol_table):
+    symbol_table.offset(len(tree))
+    for var in tree:
+        symbol_table.add(var)
+    return ''
+
+def line(tree, symbol_table):
+    match tree.type:
+        case 'init':
+            return init(tree, symbol_table)
+        case 'atrib':
+            return atrib(tree, symbol_table)
+        case 'for':
+            return parse_for(tree, symbol_table)
+        case 'if':
+            return parse_if(tree, symbol_table)
+        case 'print':
+            return parse_print(tree, symbol_table)
+        case 'read':
+            return parse_read(tree, symbol_table)
+        case 'call':
+            return call(tree, symbol_table)
+        case 'BinOp':
+            return bin_op(tree, symbol_table)
+        case 'val':
+            return get_val(tree, symbol_table)
+        case 'valList':
+            return get_val(tree, symbol_table)
+        case 'ret':
+            return ret(tree, symbol_table)
+
+def ret(tree, symbol_table):
+    out = ''
+    if len(tree.children) != 0:
+        if tree.children[0].type != 'val':
+            out += line(tree.children[0], symbol_table)
+        else:
+            out = False
+    return [out, 'return\n']
+
+
+def body(tree, symbol_table):
+    out = ''
+    for elem in tree:
+        out += line(elem, symbol_table)
+    return out
+
+        
+def init(tree,symbol_table):
+    symbol_table.add(tree)
+
+    if type(tree.children[2]) == RoseTree and tree.children[2].type == 'neg':
+        return bin_op(tree.children[2],symbol_table)
+
+    match tree.get_elem_type():
+        case DataType.FLOAT:
+            type_ = 'f'
+        case DataType.STR:
+            type_ = 's'
+        case _:
+            type_ = 'i'
+    
+    if tree.get_type() == DataType.LIST: 
+        out = ''
+        if len(tree.children) == 4:
+            out += 'pushn ' + str(tree.children[3]) + '\n'
+        else:
+            if len(tree.children[2]) != tree.children[3]:
+                out += 'pushn ' + str(tree.children[3]) + '\n'
+            else:
+                for elem in tree.children[2]:
+                    out += 'push' + type_ + ' ' + str(elem.val()) + '\n'
+        return out
+
+    if type(tree.children[2]) == RoseTree:
+        if tree.children[2].type == 'call':
+            return 'pushi 0\n' + line(RoseTree('atrib', tree.children), symbol_table)
+        else:
+            return line(tree.children[2],symbol_table)
+    else:
+        return 'push' + type_ + ' ' + str(tree.val()) + '\n'
+
+
+def atrib(tree,symbol_table):
+
+    if tree.children[2].type == 'call':
+        out = call(tree.children[2], symbol_table)
+    else:
+        out = bin_op(tree.children[2], symbol_table)
+
+    address = get_address(tree.children[1], symbol_table)
+
+    return address + out + 'storen\n'
+    
+def parse_for(tree, symbol_table):
+    global label_counter
+    out = ''
+    label1 = str(label_counter) + 'L'
+    label_counter += 1
+    label2 = str(label_counter) + 'L'
+    label_counter += 1
+
+    if tree.children[0] != None:
+        if tree.children[0].type == 'init':
+            out += init(tree.children[0], symbol_table)
+        else:
+            out += atrib(tree.children[0], symbol_table)
+    
+    out += label1 + ':\n'
+    out += bin_op(tree.children[1], symbol_table)
+    out += 'jz ' + label2 + '\n'
+    out += line(tree.children[3][0], symbol_table)
+    
+    if tree.children[2] != None:
+        if tree.children[2].type == 'call':
+            out += call(tree.children[2],symbol_table)
+        else:
+            out += atrib(tree.children[2],symbol_table)
+        
+    out += 'jump ' + label1 + '\n' + label2 + ':\npop 1\n' 
+    
+    if tree.children[0] != None:
+        symbol_table.remove(tree.children[0])
+
+    return out
+
+def parse_if(tree, symbol_table):
+    global label_counter
+    out = ''
+    if len(tree.children) == 3:
+        label1 = str(label_counter) + 'L'
+        label_counter += 1
+        label2 = str(label_counter) + 'L'
+        label_counter += 1
+        out += bin_op(tree.children[0],symbol_table)
+        out += 'jz ' + label1 + '\n'
+        out += line(tree.children[1][0], symbol_table)
+        out += 'jump ' + label2 + '\n'
+        out += label1 + ':\n'
+        out += line(tree.children[2][0], symbol_table)
+        out += label2 + ':\n'
+    else:
+        label1 = str(label_counter) + 'L'
+        label_counter += 1
+        out += bin_op(tree.children[0],symbol_table)
+        out += 'jz ' + label1 + '\n'
+        out += line(tree.children[1][0], symbol_table)
+        out += label1 + ':\n'
+    return out
+
+def parse_print(tree, symbol_table):
+    out = ''
+    if tree.children[0].type == 'val':
+
+        if tree.children[0].get_type() == DataType.STR:
+            out += 'pushs ' + tree.children[0].children[1] + '\n'
+            out += 'writes\n'
+            out += 'writeln\n'
+            
+        else:
+            [val, type] = get_val(tree.children[0], symbol_table, True)
+            out += val
+
+            match type:
+                case DataType.STR:
+                    type = 's'
+                case DataType.FLOAT:
+                    type = 'f'
+                case _:
+                    type = 'i'
+            out += 'write' + type + '\n'
+            out += 'writeln\n'
+
+    elif tree.children[0].type == 'valList':
+        val = get_val(tree.children[0], symbol_table)
+        out += val
+        match tree.children[0].get_elem_type():
+            case DataType.STR:
+                type = 's'
+            case DataType.FLOAT:
+                type = 'f'
+            case _:
+                type = 'i'
+        out += 'write' + type + '\n'
+        out += 'writeln\n'
+    else:
+        out += line(tree.children[0], symbol_table)
+        match tree.children[0].get_type():
+            case DataType.FLOAT:
+                type = 'f'
+            case DataType.STR:
+                type = 's'
+            case _:
+                type = 'i'
+        out += 'write' + type + '\n'
+        out += 'writeln\n'
+    
+    return out
+    
+def parse_read(tree, symbol_table):
+    out = ''
+
+    match tree.children[0].get_elem_type():
+        case DataType.INT:
+            conversion = 'atoi\n'
+        case DataType.BOOL:
+            conversion = 'atoi\n'
+        case DataType.FLOAT:
+            conversion = 'atof\n'
+        case _:
+            conversion = ''
+            
+
+    out += get_address(tree.children[0], symbol_table)
+    out += 'read\n'
+    out += conversion
+    out += 'storen\n'
+        
+    return out
+
+def call(tree, symbol_table):
+    out = ''
+    for arg in tree.args():
+        if arg.type == 'BinOp':
+            out += bin_op(arg, symbol_table)
+        elif arg.get_type() == DataType.LIST:
+            out += get_address(arg, symbol_table, _single= True)
+        else:
+            out += get_val(arg, symbol_table)
+    out += 'pusha ' + tree.name() + '\n'
+    out += 'call\n'
+    if len(tree.args()) > 1:
+        out += 'pop ' + str(len(tree.args()) - 1) + '\n'
+    return out
+
+def code_generation(inter):
+    out = 'start\npusha main\ncall\nstop\n\n'
+    
+    prog = inter.children
+    out += funcs(prog)
+        
+    return out

@@ -1,0 +1,14 @@
+func main(){
+    
+    let x: [int, 5] = [1, 2, 3, 4, 5];
+    let y;
+
+    read(x[2]);
+    
+    y = x[2] + 2;
+
+    print(x[2]);
+    print(y);
+
+    return;
+}
