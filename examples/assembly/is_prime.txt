@@ -1,0 +1,91 @@
+start
+pusha main
+call
+stop
+
+isprime:
+pushi 1
+pushl 0
+pushi 2
+mod
+pushi 0
+equal
+jz 0L
+pushfp
+pushi 0
+pushi 0
+storen
+0L:
+pushi 3
+1L:
+pushl 1
+pushl -1
+pushi 2
+div
+ftoi
+inf
+pushl 0
+pushi 1
+equal
+and
+jz 2L
+pushl -1
+pushl 1
+mod
+pushi 0
+equal
+jz 3L
+pushfp
+pushi 0
+pushi 0
+storen
+3L:
+pushfp
+pushi 1
+pushl 1
+pushi 2
+add
+storen
+jump 1L
+2L:
+pop 1
+pushl 0
+pushi 0
+equal
+jz 4L
+pushs "Is not prime"
+writes
+writeln
+jump 5L
+4L:
+pushs "Is prime"
+writes
+writeln
+5L:
+storel -1
+return
+
+
+main:
+pushi 0
+pushfp
+pushi 0
+read
+atoi
+storen
+pushl 0
+pushi 0
+supeq
+jz 6L
+pushl 0
+pusha isprime
+call
+jump 7L
+6L:
+pushs "Invalid number"
+writes
+writeln
+7L:
+return
+
+

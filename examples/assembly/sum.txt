@@ -19,7 +19,7 @@ pushl 2
 writei
 writeln
 pushf 2.0
-pushf 0.5
+pushf 1.0
 pushf 0.0
 pushfp
 pushi 5

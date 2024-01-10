@@ -68,6 +68,7 @@ pushi 8
 pushi 9
 pushi 10
 pushi 0
+pushfp
 pushi 10
 pushfp
 pushi 0

@@ -1,4 +1,3 @@
-from sympy import false
 from utils import *
 from copy import deepcopy
 import ply.yacc as yacc

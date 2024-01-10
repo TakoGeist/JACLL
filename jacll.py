@@ -1,8 +1,9 @@
 
 if __name__ == '__main__':
-    from sys import argv
+    from sys import path, argv
+    path.append('src')
     from os import getcwd
-    from jacll_compiler import compile
+    from jacll_compiler import Jacll
 
     if len(argv) < 2:
         print("No arguments foound.")
@@ -13,7 +14,8 @@ if __name__ == '__main__':
     else:
         raise TypeError("Invalid file type. Expected '.jacll' file.")
 
-    assembly = compile(stream)
+    compiler = Jacll()
+    assembly = compiler.compile(stream)
 
     if len(argv) < 3:
         print(assembly)
