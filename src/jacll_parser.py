@@ -131,7 +131,7 @@ def p_line(p):
         p[0] = []
 
 def p_print(p):
-    """print : PRINT LPAR val RPAR"""
+    """print : PRINT LPAR evaluation RPAR"""
 
     if p[3].get_type() == DataType.STR:
         p[0] = RoseTree('print', [p[3]])
@@ -306,7 +306,7 @@ def p_evaluation(p):
     error = p[0].validate_op()
 
     if error != 0:
-        raise error
+        raise TypeError(f"Parser found an error at line {p.lineno(2)}.\n" + error)
 
 def p_declaration_list(p):
     """declaration : LET var EQUAL listInit

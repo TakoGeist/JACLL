@@ -251,7 +251,7 @@ class RoseTree:
             left = self.children[2].get_elem_type()
             right = self.children[3].get_elem_type()
             if left != right:
-                return TypeError(f"Mismatched types. Instance of {left} and {right} found.")
+                return (f"Mismatched types. Instance of {left} and {right} found.")
             if not self.children[2].get_elem_type().is_valid(self.children[1]):
                 return SyntaxError(f"Invalid use of {self.children[1]} operator with value of type {self.children[2].get_elem_type()}.")
             if self.children[1] in ['==', '!=', '<=', '<', '>=', '>', '&&', '||']:
